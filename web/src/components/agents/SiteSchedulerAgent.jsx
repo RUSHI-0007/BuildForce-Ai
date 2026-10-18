@@ -2,7 +2,7 @@ import React from 'react';
 import { useApp } from '../../hooks/useApp';
 import { Calendar } from 'lucide-react';
 
-export function SiteSchedulerAgent({ _activeProject }) {
+export function SiteSchedulerAgent({ activeProject }) {
   const { tasks = [] } = useApp();
 
   const completedTasks = tasks.filter(t => t.status === 'Completed');
