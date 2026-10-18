@@ -166,8 +166,11 @@ export function createEventBus(options = {}) {
         listeners.set(eventType, new Set());
       }
 
+      const agentId = subOptions.agentId || subOptions.agent || handler.agentId || handler.name || 'default_agent';
+
       const subscriberRecord = {
         handler,
+        agentId,
         oncePerCorrelationId: Boolean(subOptions.oncePerCorrelationId)
       };
 
@@ -187,7 +190,7 @@ export function createEventBus(options = {}) {
      * Enforces:
      * 1. Max chain depth guard (propagates MaxChainDepthError to halt cascades).
      * 2. Subscriber error isolation for standard exceptions.
-     * 3. Once-per-correlation_id handling for idempotent subscribers.
+     * 3. Once-per-correlation_id handling for idempotent subscribers (once per agent and signal per correlation_id).
      * @param {string} type 
      * @param {any} [payload={}]
      * @param {Object} [meta={}]
@@ -223,10 +226,11 @@ export function createEventBus(options = {}) {
 
         for (const sub of allSubscribers) {
           // If oncePerCorrelationId is enabled and correlation_id exists, enforce deduplication
+          // Keyed strictly per agent and signal per correlation_id: "${agent}:${signal}:${correlation_id}"
           if (sub.oncePerCorrelationId && correlation_id) {
-            const key = `${type}:${sub.handler.name || 'anon'}:${correlation_id}`;
+            const key = `${sub.agentId}:${type}:${correlation_id}`;
             if (processedCorrelations.has(key)) {
-              continue; // Skip duplicate correlation event
+              continue; // Skip duplicate correlation event for this agent and signal
             }
             processedCorrelations.add(key);
           }

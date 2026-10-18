@@ -79,6 +79,52 @@ describe('EventLedger & EventBus (packages/core/src/agents/bus.js)', () => {
       expect(invoiceHandler).toHaveBeenCalledTimes(2);
     });
 
+    it('deduplicates once per agent and signal per correlation_id across a three-event sequence', () => {
+      const bus = createEventBus();
+
+      const agentA_invoiceHandler = vi.fn();
+      const agentB_invoiceHandler = vi.fn();
+      const agentA_paymentHandler = vi.fn();
+
+      // Agent A and Agent B subscribe to INVOICE_SUBMITTED with oncePerCorrelationId
+      bus.subscribe('INVOICE_SUBMITTED', agentA_invoiceHandler, {
+        agentId: 'agent_estimator',
+        oncePerCorrelationId: true
+      });
+      bus.subscribe('INVOICE_SUBMITTED', agentB_invoiceHandler, {
+        agentId: 'agent_procurement',
+        oncePerCorrelationId: true
+      });
+
+      // Agent A also subscribes to PAYMENT_RELEASED with oncePerCorrelationId
+      bus.subscribe('PAYMENT_RELEASED', agentA_paymentHandler, {
+        agentId: 'agent_estimator',
+        oncePerCorrelationId: true
+      });
+
+      const sharedCorrelationId = 'corr_task_777';
+
+      // --- Event 1: First signal (INVOICE_SUBMITTED) with sharedCorrelationId ---
+      bus.publish('INVOICE_SUBMITTED', { id: 'inv_1' }, { correlation_id: sharedCorrelationId });
+      expect(agentA_invoiceHandler).toHaveBeenCalledTimes(1);
+      expect(agentB_invoiceHandler).toHaveBeenCalledTimes(1);
+      expect(agentA_paymentHandler).toHaveBeenCalledTimes(0);
+
+      // --- Event 2: Duplicate signal (INVOICE_SUBMITTED) with identical correlation_id ---
+      bus.publish('INVOICE_SUBMITTED', { id: 'inv_1' }, { correlation_id: sharedCorrelationId });
+      // Both agents deduplicate and skip
+      expect(agentA_invoiceHandler).toHaveBeenCalledTimes(1);
+      expect(agentB_invoiceHandler).toHaveBeenCalledTimes(1);
+      expect(agentA_paymentHandler).toHaveBeenCalledTimes(0);
+
+      // --- Event 3: Different signal (PAYMENT_RELEASED) with same correlation_id ---
+      bus.publish('PAYMENT_RELEASED', { id: 'pay_1' }, { correlation_id: sharedCorrelationId });
+      // Agent A receives PAYMENT_RELEASED because dedupe is keyed per (agent, signal, correlation_id)
+      expect(agentA_paymentHandler).toHaveBeenCalledTimes(1);
+      expect(agentA_invoiceHandler).toHaveBeenCalledTimes(1);
+      expect(agentB_invoiceHandler).toHaveBeenCalledTimes(1);
+    });
+
     it('isolates subscriber errors so one failure does not halt subsequent subscribers', () => {
       const bus = createEventBus();
       const failingSubscriber = vi.fn(() => {
