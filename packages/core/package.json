@@ -7,6 +7,7 @@
   "exports": {
     ".": "./src/index.js",
     "./agents": "./src/agents/index.js",
-    "./formatters": "./src/formatters/index.js"
+    "./formatters": "./src/formatters/index.js",
+    "./schema": "./src/schema/index.js"
   }
 }
