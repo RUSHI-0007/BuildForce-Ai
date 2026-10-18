@@ -139,6 +139,54 @@ describe('EventLedger & EventBus (packages/core/src/agents/bus.js)', () => {
       expect(agentB_invoiceHandler).toHaveBeenCalledTimes(1);
     });
 
+    it('allows two OrderNeeded events for different materials sharing one correlation_id while dropping a replay of the same event id', () => {
+      const bus = createEventBus();
+      const orderHandler = vi.fn();
+
+      bus.subscribe('OrderNeeded', orderHandler, {
+        agentId: 'procurement_agent',
+        oncePerCorrelationId: true
+      });
+
+      const correlationId = 'corr_rfq_batch_55';
+
+      // 1. OrderNeeded for cement
+      bus.publish(
+        'OrderNeeded',
+        { material_id: 'mat_cement_50kg', quantity: 200 },
+        { id: 'evt_order_cement', correlation_id: correlationId }
+      );
+      expect(orderHandler).toHaveBeenCalledTimes(1);
+      expect(orderHandler).toHaveBeenLastCalledWith(expect.objectContaining({
+        id: 'evt_order_cement',
+        type: 'OrderNeeded',
+        payload: { material_id: 'mat_cement_50kg', quantity: 200 }
+      }));
+
+      // 2. OrderNeeded for steel sharing the exact same correlation_id
+      bus.publish(
+        'OrderNeeded',
+        { material_id: 'mat_steel_12mm', quantity: 3.5 },
+        { id: 'evt_order_steel', correlation_id: correlationId }
+      );
+      // Both are delivered because they target different materials
+      expect(orderHandler).toHaveBeenCalledTimes(2);
+      expect(orderHandler).toHaveBeenLastCalledWith(expect.objectContaining({
+        id: 'evt_order_steel',
+        type: 'OrderNeeded',
+        payload: { material_id: 'mat_steel_12mm', quantity: 3.5 }
+      }));
+
+      // 3. Replay of the cement order event with the identical event id
+      bus.publish(
+        'OrderNeeded',
+        { material_id: 'mat_cement_50kg', quantity: 200 },
+        { id: 'evt_order_cement', correlation_id: correlationId }
+      );
+      // Replay of the same event id is dropped
+      expect(orderHandler).toHaveBeenCalledTimes(2);
+    });
+
     it('isolates subscriber errors so one failure does not halt subsequent subscribers', () => {
       const bus = createEventBus();
       const failingSubscriber = vi.fn(() => {

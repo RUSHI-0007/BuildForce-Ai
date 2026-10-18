@@ -131,6 +131,28 @@ export function createEventLedger(initialEntries = []) {
   return Object.freeze(ledger);
 }
 
+function extractItemId(payload, meta) {
+  const p = (payload && typeof payload === 'object') ? payload : {};
+  const m = (meta && typeof meta === 'object') ? meta : {};
+  return (
+    m.itemId ||
+    m.item_id ||
+    p.itemId ||
+    p.item_id ||
+    p.materialId ||
+    p.material_id ||
+    p.taskId ||
+    p.task_id ||
+    p.invoiceId ||
+    p.invoice_id ||
+    p.poId ||
+    p.po_id ||
+    p.dealerId ||
+    p.dealer_id ||
+    null
+  );
+}
+
 /**
  * Creates a hardened event bus with chain depth limits, correlation idempotency, and error isolation.
  * @param {Object} [options]
@@ -195,10 +217,11 @@ export function createEventBus(options = {}) {
      * Enforces:
      * 1. Max chain depth guard (propagates MaxChainDepthError to halt cascades).
      * 2. Subscriber error isolation for standard exceptions.
-     * 3. Once-per-correlation_id handling for idempotent subscribers (once per agent and signal per correlation_id).
+     * 3. Once-per-correlation_id handling: key replays on event id, and item signals on type + item id.
      * @param {string} type 
      * @param {any} [payload={}]
      * @param {Object} [meta={}]
+     * @param {string} [meta.id]
      * @param {string} [meta.correlation_id]
      * @param {string} [meta.correlationId]
      * @returns {Object} Stored frozen event
@@ -211,10 +234,11 @@ export function createEventBus(options = {}) {
       const correlation_id = meta.correlation_id || meta.correlationId || payload.correlation_id || payload.correlationId;
 
       const rawEvent = {
+        ...(meta.id || payload.id ? { id: meta.id || payload.id } : {}),
         type,
         payload,
         correlation_id: correlation_id || null,
-        timestamp: new Date().toISOString()
+        timestamp: meta.timestamp || payload.timestamp || new Date().toISOString()
       };
 
       const storedEvent = ledger.append(rawEvent);
@@ -230,14 +254,31 @@ export function createEventBus(options = {}) {
         ];
 
         for (const sub of allSubscribers) {
-          // If oncePerCorrelationId is enabled and correlation_id exists, enforce deduplication
-          // Keyed strictly per agent and signal per correlation_id: "${agent}:${signal}:${correlation_id}"
-          if (sub.oncePerCorrelationId && correlation_id) {
-            const key = `${sub.agentId}:${type}:${correlation_id}`;
-            if (processedCorrelations.has(key)) {
-              continue; // Skip duplicate correlation event for this agent and signal
+          if (sub.oncePerCorrelationId) {
+            // 1. Key replays on the event id
+            if (storedEvent.id) {
+              const replayKey = `${sub.agentId}:evt:${storedEvent.id}`;
+              if (processedCorrelations.has(replayKey)) {
+                continue; // Replay of the same event id is dropped
+              }
             }
-            processedCorrelations.add(key);
+
+            // 2. Where one signal per item is intended, key on type plus the item id (per correlation_id)
+            if (correlation_id) {
+              const itemId = extractItemId(payload, meta);
+              const signalKey = itemId
+                ? `${sub.agentId}:${type}:${itemId}:${correlation_id}`
+                : `${sub.agentId}:${type}:${correlation_id}`;
+
+              if (processedCorrelations.has(signalKey)) {
+                continue; // Duplicate signal for this item under this correlation_id
+              }
+              processedCorrelations.add(signalKey);
+            }
+
+            if (storedEvent.id) {
+              processedCorrelations.add(`${sub.agentId}:evt:${storedEvent.id}`);
+            }
           }
 
           try {
