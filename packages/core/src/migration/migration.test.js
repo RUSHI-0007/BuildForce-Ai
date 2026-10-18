@@ -263,6 +263,10 @@ describe('Storage Migration Engine (packages/core/src/migration)', () => {
       const { state, report } = migrateLegacyState(resilienceLegacyFixture);
       expect(report.success).toBe(true);
 
+      // Preserves negative budget (-500) and logs a warning instead of silently overwriting
+      expect(state.projects[0].budget).toBe(-500);
+      expect(report.warnings.some(w => w.field === 'budget' && w.value === -500)).toBe(true);
+
       // Clamps invalid progress (> 100) to 100 and normalizes status to 'In Progress'
       expect(state.projects[0].progress).toBe(100);
       expect(state.projects[0].status).toBe('In Progress');
@@ -270,8 +274,9 @@ describe('Storage Migration Engine (packages/core/src/migration)', () => {
       // Task duration 0 corrected to 1
       expect(state.tasks[0].duration_days).toBe(1);
 
-      // Labour daily wage 'invalid_wage' defaulted to positive wage (500)
-      expect(state.labour[0].daily_wage).toBe(500);
+      // Labour daily wage 'invalid_wage' preserved and warned instead of silently overwriting with 500
+      expect(state.labour[0].daily_wage).toBe('invalid_wage');
+      expect(report.warnings.some(w => w.field === 'daily_wage' && w.value === 'invalid_wage')).toBe(true);
 
       // Attendance UNKNOWN_STATUS normalized to 'PRESENT' and negative advance clamped to 0
       expect(state.attendance[0].status).toBe('PRESENT');

@@ -58,11 +58,20 @@ export function migrateProjects(raw) {
   const list = Array.isArray(parsed) ? parsed : [];
   const data = [];
   const errors = [];
+  const warnings = [];
 
   for (const item of list) {
     if (!item || typeof item !== 'object') continue;
     const rawBudget = Number(item.budget ?? 0);
-    const budget = (!isNaN(rawBudget) && rawBudget >= 0) ? rawBudget : 0;
+    let budget;
+    if (isNaN(rawBudget) || rawBudget < 0) {
+      const msg = `[Migration Warning] Project "${item.id || item.name}" has invalid or negative budget (${item.budget}); preserving original value.`;
+      console.warn(msg);
+      warnings.push({ item, field: 'budget', value: item.budget, warning: msg });
+      budget = item.budget;
+    } else {
+      budget = rawBudget;
+    }
     const rawProgress = Number(item.progress ?? 0);
     const progress = !isNaN(rawProgress) ? Math.min(100, Math.max(0, rawProgress)) : 0;
     const transformed = {
@@ -71,7 +80,7 @@ export function migrateProjects(raw) {
       progress,
       status: ['Planning', 'In Progress', 'On Hold', 'Completed'].includes(item.status) ? item.status : 'In Progress'
     };
-    const validation = validateProject(transformed);
+    const validation = validateProject(transformed, { preserveOriginal: true });
     if (validation.valid) {
       data.push(validation.value);
     } else {
@@ -79,7 +88,7 @@ export function migrateProjects(raw) {
     }
   }
 
-  return { data, errors };
+  return { data, errors, warnings };
 }
 
 /**
@@ -189,16 +198,26 @@ export function migrateLabour(raw) {
   const list = Array.isArray(parsed) ? parsed : [];
   const data = [];
   const errors = [];
+  const warnings = [];
 
   for (const item of list) {
     if (!item || typeof item !== 'object') continue;
     const wage = Number(item.daily_wage ?? 0);
+    let daily_wage;
+    if (isNaN(wage) || wage <= 0) {
+      const msg = `[Migration Warning] Worker "${item.id || item.name}" has invalid or non-positive daily_wage (${item.daily_wage}); preserving original value.`;
+      console.warn(msg);
+      warnings.push({ item, field: 'daily_wage', value: item.daily_wage, warning: msg });
+      daily_wage = item.daily_wage;
+    } else {
+      daily_wage = wage;
+    }
     const transformed = {
       ...item,
-      daily_wage: (!isNaN(wage) && wage > 0) ? wage : 500,
+      daily_wage,
       status: item.status === 'Inactive' ? 'Inactive' : 'Active'
     };
-    const validation = validateLabour(transformed);
+    const validation = validateLabour(transformed, { preserveOriginal: true });
     if (validation.valid) {
       data.push(validation.value);
     } else {
@@ -206,7 +225,7 @@ export function migrateLabour(raw) {
     }
   }
 
-  return { data, errors };
+  return { data, errors, warnings };
 }
 
 /**
@@ -289,9 +308,11 @@ export function migratePayments(raw) {
  */
 export function migrateLegacyState(legacyMap = {}) {
   const allErrors = [];
+  const allWarnings = [];
 
   const projectsRes = migrateProjects(legacyMap[LEGACY_STORAGE_KEYS.PROJECTS]);
   if (projectsRes.errors.length) allErrors.push(...projectsRes.errors);
+  if (projectsRes.warnings?.length) allWarnings.push(...projectsRes.warnings);
 
   const tasksRes = migrateTasks(legacyMap[LEGACY_STORAGE_KEYS.TASKS]);
   if (tasksRes.errors.length) allErrors.push(...tasksRes.errors);
@@ -304,6 +325,7 @@ export function migrateLegacyState(legacyMap = {}) {
 
   const labourRes = migrateLabour(legacyMap[LEGACY_STORAGE_KEYS.LABOUR]);
   if (labourRes.errors.length) allErrors.push(...labourRes.errors);
+  if (labourRes.warnings?.length) allWarnings.push(...labourRes.warnings);
 
   const attendanceRes = migrateAttendance(legacyMap[LEGACY_STORAGE_KEYS.ATTENDANCE]);
   if (attendanceRes.errors.length) allErrors.push(...attendanceRes.errors);
@@ -345,7 +367,8 @@ export function migrateLegacyState(legacyMap = {}) {
     report: {
       success: allErrors.length === 0,
       counts,
-      errors: allErrors
+      errors: allErrors,
+      warnings: allWarnings
     }
   };
 }
@@ -427,7 +450,8 @@ export function migrateLocalStorage(storage, options = {}) {
       alreadyMigrated: false,
       schemaVersion: SCHEMA_VERSION,
       counts: report.counts,
-      errors: report.errors
+      errors: report.errors,
+      warnings: report.warnings
     };
   } catch (err) {
     return {

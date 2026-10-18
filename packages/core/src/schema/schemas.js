@@ -10,17 +10,29 @@
  * @param {Object} input
  * @returns {{ valid: boolean, errors: string[], value: Object }}
  */
-export function validateProject(input = {}) {
+export function validateProject(input = {}, options = {}) {
   const errors = [];
+  const warnings = [];
   if (!input || typeof input !== 'object') {
-    return { valid: false, errors: ['Project must be a non-null object'], value: null };
+    return { valid: false, errors: ['Project must be a non-null object'], warnings: [], value: null };
   }
 
   const name = typeof input.name === 'string' ? input.name.trim() : '';
   if (!name) errors.push('Project name is required');
 
-  const budget = Number(input.budget ?? 0);
-  if (isNaN(budget) || budget < 0) errors.push('Project budget must be a non-negative number');
+  const rawBudget = Number(input.budget ?? 0);
+  let budget;
+  if (isNaN(rawBudget) || rawBudget < 0) {
+    if (options.preserveOriginal) {
+      warnings.push(`Project budget is invalid or negative: ${input.budget}`);
+      budget = input.budget;
+    } else {
+      errors.push('Project budget must be a non-negative number');
+      budget = rawBudget;
+    }
+  } else {
+    budget = rawBudget;
+  }
 
   const progress = Number(input.progress ?? 0);
   if (isNaN(progress) || progress < 0 || progress > 100) {
@@ -36,6 +48,7 @@ export function validateProject(input = {}) {
   return {
     valid: errors.length === 0,
     errors,
+    warnings,
     value: errors.length === 0 ? {
       id: input.id || `prj_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
       org_id: input.org_id || 'org_primary_01',
@@ -189,18 +202,28 @@ export function validateMaterialTransaction(input = {}) {
  * @param {Object} input
  * @returns {{ valid: boolean, errors: string[], value: Object }}
  */
-export function validateLabour(input = {}) {
+export function validateLabour(input = {}, options = {}) {
   const errors = [];
+  const warnings = [];
   if (!input || typeof input !== 'object') {
-    return { valid: false, errors: ['Labour record must be a non-null object'], value: null };
+    return { valid: false, errors: ['Labour record must be a non-null object'], warnings: [], value: null };
   }
 
   const name = typeof input.name === 'string' ? input.name.trim() : '';
   if (!name) errors.push('Worker name is required');
 
-  const daily_wage = Number(input.daily_wage ?? 0);
-  if (isNaN(daily_wage) || daily_wage <= 0) {
-    errors.push('Worker daily_wage must be a positive number');
+  const wage = Number(input.daily_wage ?? 0);
+  let daily_wage;
+  if (isNaN(wage) || wage <= 0) {
+    if (options.preserveOriginal) {
+      warnings.push(`Worker daily_wage is invalid or non-positive: ${input.daily_wage}`);
+      daily_wage = input.daily_wage;
+    } else {
+      errors.push('Worker daily_wage must be a positive number');
+      daily_wage = wage;
+    }
+  } else {
+    daily_wage = wage;
   }
 
   const validStatuses = ['Active', 'Inactive'];
@@ -212,6 +235,7 @@ export function validateLabour(input = {}) {
   return {
     valid: errors.length === 0,
     errors,
+    warnings,
     value: errors.length === 0 ? {
       id: input.id || `lab_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
       org_id: input.org_id || 'org_primary_01',
