@@ -34,11 +34,24 @@ export function calculateCPM(tasks = []) {
     adj.set(t.id, []);
   });
 
+  // Validate that all dependsOn task IDs exist
+  for (const task of taskMap.values()) {
+    for (const predId of task.dependsOn) {
+      if (!taskMap.has(predId)) {
+        return {
+          error: `Task "${task.id}" depends on non-existent task "${predId}"`,
+          tasksWithFloat: [],
+          criticalPathTaskIds: [],
+          totalDurationDays: 0
+        };
+      }
+    }
+  }
+
   // Calculate in-degrees and build adjacency list
   taskMap.forEach(task => {
-    const validPreds = task.dependsOn.filter(predId => taskMap.has(predId));
-    inDegree.set(task.id, validPreds.length);
-    validPreds.forEach(predId => {
+    inDegree.set(task.id, task.dependsOn.length);
+    task.dependsOn.forEach(predId => {
       adj.get(predId).push(task.id);
     });
   });

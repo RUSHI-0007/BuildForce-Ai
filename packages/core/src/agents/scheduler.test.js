@@ -69,5 +69,19 @@ describe('Scheduler Agent Logic (packages/core/src/agents/scheduler.js)', () => 
       expect(t4.earlyStart).toBe(18); // 10 + 8
       expect(t4.earlyFinish).toBe(24);
     });
+
+    it('returns a clear error when a task depends on a non-existent task id', () => {
+      const invalidDependencyTasks = [
+        { id: 't1', name: 'Foundation', duration_days: 5, depends_on: [] },
+        { id: 't2', name: 'Walls', duration_days: 8, depends_on: ['non_existent_id'] }
+      ];
+
+      const result = calculateCPM(invalidDependencyTasks);
+      expect(result.error).toBeDefined();
+      expect(result.error).toMatch(/non-existent|unknown|missing/i);
+      expect(result.error).toContain('non_existent_id');
+      expect(result.criticalPathTaskIds).toEqual([]);
+      expect(result.totalDurationDays).toBe(0);
+    });
   });
 });
