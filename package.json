@@ -10,7 +10,7 @@
   "scripts": {
     "dev": "npm run dev --workspace=web",
     "build": "npm run build --workspace=web && node --input-type=module -e \"import fs from 'node:fs'; fs.cpSync('web/dist', 'dist', {recursive: true});\"",
-    "lint": "oxlint web/src",
+    "lint": "oxlint web/src packages server/src",
     "test": "vitest run"
   },
   "devDependencies": {

@@ -366,7 +366,7 @@ export function migrateLocalStorage(storage, options = {}) {
 
   // Extract all legacy items from storage
   const legacyMap = {};
-  for (const [keyName, storageKey] of Object.entries(LEGACY_STORAGE_KEYS)) {
+  for (const storageKey of Object.values(LEGACY_STORAGE_KEYS)) {
     const raw = storage.getItem(storageKey);
     if (raw !== null && raw !== undefined) {
       legacyMap[storageKey] = raw;
