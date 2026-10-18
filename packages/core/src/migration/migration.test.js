@@ -23,6 +23,8 @@ import {
   MIGRATION_FLAG_KEY,
   SCHEMA_VERSION
 } from './migrate.js';
+import { calculateCashRunway } from '../agents/cashPlan.js';
+import { buildProjectSnapshot } from '../agents/snapshot.js';
 
 describe('Storage Migration Engine (packages/core/src/migration)', () => {
   describe('Legacy Fixture Snapshot Transformation', () => {
@@ -267,8 +269,10 @@ describe('Storage Migration Engine (packages/core/src/migration)', () => {
       const { state, report } = migrateLegacyState(resilienceLegacyFixture);
       expect(report.success).toBe(true);
 
-      // Preserves negative budget (-500) and logs a warning instead of silently overwriting
-      expect(state.projects[0].budget).toBe(-500);
+      // Project budget: safe value 0 in budget, original raw value in raw_budget, flagged needs_review
+      expect(state.projects[0].budget).toBe(0);
+      expect(state.projects[0].raw_budget).toBe(-500);
+      expect(state.projects[0].needs_review).toBe(true);
       expect(report.warnings.some(w => w.field === 'budget' && w.value === -500)).toBe(true);
 
       // Clamps invalid progress (> 100) to 100 and normalizes status to 'In Progress'
@@ -278,9 +282,24 @@ describe('Storage Migration Engine (packages/core/src/migration)', () => {
       // Task duration 0 corrected to 1
       expect(state.tasks[0].duration_days).toBe(1);
 
-      // Labour daily wage 'invalid_wage' preserved and warned instead of silently overwriting with 500
-      expect(state.labour[0].daily_wage).toBe('invalid_wage');
+      // Labour daily wage: safe value 500 in daily_wage, original raw value in raw_daily_wage, flagged needs_review
+      expect(state.labour[0].daily_wage).toBe(500);
+      expect(state.labour[0].raw_daily_wage).toBe('invalid_wage');
+      expect(state.labour[0].needs_review).toBe(true);
       expect(report.warnings.some(w => w.field === 'daily_wage' && w.value === 'invalid_wage')).toBe(true);
+
+      // Calculations safety check: labour total and cash runway never return NaN with resilience fixture
+      const totalLabourWage = state.labour.reduce((sum, l) => sum + Number(l.daily_wage || 0), 0);
+      expect(isNaN(totalLabourWage)).toBe(false);
+      expect(totalLabourWage).toBe(500);
+
+      const snapshot = buildProjectSnapshot(state, state.projects[0].id);
+      const runway = calculateCashRunway(snapshot);
+      expect(isNaN(runway.runwayWeeks)).toBe(false);
+      expect(isNaN(runway.currentCash)).toBe(false);
+      expect(isNaN(runway.availableForVendors)).toBe(false);
+      expect(isNaN(runway.estimatedWeeklyWages)).toBe(false);
+      expect(runway.estimatedWeeklyWages).toBe(3000); // 500 * 6 days
 
       // Attendance UNKNOWN_STATUS normalized to 'PRESENT' and negative advance clamped to 0
       expect(state.attendance[0].status).toBe('PRESENT');

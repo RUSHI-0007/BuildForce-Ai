@@ -22,10 +22,15 @@ export function validateProject(input = {}, options = {}) {
 
   const rawBudget = Number(input.budget ?? 0);
   let budget;
+  let raw_budget = input.raw_budget !== undefined ? input.raw_budget : null;
+  let needs_review = Boolean(input.needs_review);
+
   if (isNaN(rawBudget) || rawBudget < 0) {
     if (options.preserveOriginal) {
       warnings.push(`Project budget is invalid or negative: ${input.budget}`);
-      budget = input.budget;
+      raw_budget = input.budget;
+      budget = 0;
+      needs_review = true;
     } else {
       errors.push('Project budget must be a non-negative number');
       budget = rawBudget;
@@ -56,6 +61,8 @@ export function validateProject(input = {}, options = {}) {
       location: input.location ? String(input.location).trim() : '',
       client_name: input.client_name ? String(input.client_name).trim() : '',
       budget,
+      raw_budget,
+      needs_review,
       status,
       progress,
       start_date: input.start_date || null,
@@ -234,10 +241,15 @@ export function validateLabour(input = {}, options = {}) {
 
   const wage = Number(input.daily_wage ?? 0);
   let daily_wage;
+  let raw_daily_wage = input.raw_daily_wage !== undefined ? input.raw_daily_wage : null;
+  let needs_review = Boolean(input.needs_review);
+
   if (isNaN(wage) || wage <= 0) {
     if (options.preserveOriginal) {
       warnings.push(`Worker daily_wage is invalid or non-positive: ${input.daily_wage}`);
-      daily_wage = input.daily_wage;
+      raw_daily_wage = input.daily_wage;
+      daily_wage = 500;
+      needs_review = true;
     } else {
       errors.push('Worker daily_wage must be a positive number');
       daily_wage = wage;
@@ -263,6 +275,8 @@ export function validateLabour(input = {}, options = {}) {
       phone: input.phone ? String(input.phone).trim() : '',
       trade: input.trade ? String(input.trade).trim() : 'General Labour',
       daily_wage,
+      raw_daily_wage,
+      needs_review,
       status,
       created_at: input.created_at || new Date().toISOString()
     } : null

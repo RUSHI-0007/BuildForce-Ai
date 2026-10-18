@@ -72,11 +72,15 @@ export function migrateProjects(raw) {
     if (!item || typeof item !== 'object') continue;
     const rawBudget = Number(item.budget ?? 0);
     let budget;
+    let raw_budget = null;
+    let needs_review = false;
     if (isNaN(rawBudget) || rawBudget < 0) {
-      const msg = `[Migration Warning] Project "${item.id || item.name}" has invalid or negative budget (${item.budget}); preserving original value.`;
+      const msg = `[Migration Warning] Project "${item.id || item.name}" has invalid or negative budget (${item.budget}); preserving original in raw_budget and flagging needs_review.`;
       console.warn(msg);
       warnings.push({ item, field: 'budget', value: item.budget, warning: msg });
-      budget = item.budget;
+      raw_budget = item.budget;
+      budget = 0;
+      needs_review = true;
     } else {
       budget = rawBudget;
     }
@@ -85,6 +89,8 @@ export function migrateProjects(raw) {
     const transformed = {
       ...item,
       budget,
+      raw_budget,
+      needs_review,
       progress,
       status: ['Planning', 'In Progress', 'On Hold', 'Completed'].includes(item.status) ? item.status : 'In Progress'
     };
@@ -219,17 +225,23 @@ export function migrateLabour(raw) {
     if (!item || typeof item !== 'object') continue;
     const wage = Number(item.daily_wage ?? 0);
     let daily_wage;
+    let raw_daily_wage = null;
+    let needs_review = false;
     if (isNaN(wage) || wage <= 0) {
-      const msg = `[Migration Warning] Worker "${item.id || item.name}" has invalid or non-positive daily_wage (${item.daily_wage}); preserving original value.`;
+      const msg = `[Migration Warning] Worker "${item.id || item.name}" has invalid or non-positive daily_wage (${item.daily_wage}); preserving original in raw_daily_wage and flagging needs_review.`;
       console.warn(msg);
       warnings.push({ item, field: 'daily_wage', value: item.daily_wage, warning: msg });
-      daily_wage = item.daily_wage;
+      raw_daily_wage = item.daily_wage;
+      daily_wage = 500;
+      needs_review = true;
     } else {
       daily_wage = wage;
     }
     const transformed = {
       ...item,
       daily_wage,
+      raw_daily_wage,
+      needs_review,
       status: item.status === 'Inactive' ? 'Inactive' : 'Active'
     };
     const validation = validateLabour(transformed, { preserveOriginal: true });

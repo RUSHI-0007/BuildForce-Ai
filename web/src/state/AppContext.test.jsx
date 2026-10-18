@@ -54,6 +54,24 @@ describe('AppContext - Migration, New Entities & Event Ledger Persistence', () =
     const savedLabour = JSON.parse(mockStorage.getItem('buildsite_labour_v1'));
     expect(savedLabour[0].daily_wage).toBe(750);
     expect(contextValue).not.toBeNull();
+    expect(contextValue.migrationReport).toBeDefined();
+    expect(Array.isArray(contextValue.migrationWarnings)).toBe(true);
+    expect(typeof contextValue.recordsNeedReview).toBe('boolean');
+  });
+
+  it('exposes migration warnings and recordsNeedReview in app state for UI review banner', () => {
+    mockStorage.setItem('buildsite_projects', JSON.stringify([
+      { id: 'site_bad', name: 'Corrupt Site', budget: -1000 }
+    ]));
+    mockStorage.setItem('buildsite_labour', JSON.stringify([
+      { id: 'lab_bad', name: 'Corrupt Labour', daily_wage: 'bad_wage' }
+    ]));
+
+    const contextValue = renderWithContext();
+    expect(contextValue.recordsNeedReview).toBe(true);
+    expect(contextValue.migrationWarnings.length).toBeGreaterThanOrEqual(2);
+    expect(contextValue.migrationWarnings.some(w => w.field === 'budget')).toBe(true);
+    expect(contextValue.migrationWarnings.some(w => w.field === 'daily_wage')).toBe(true);
   });
 
   it('initializes and provides new entities: dealers, invoices, purchaseOrders, proposals, cashSettings', () => {

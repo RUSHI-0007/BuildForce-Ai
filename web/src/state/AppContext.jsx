@@ -85,12 +85,16 @@ const INITIAL_CASH_SETTINGS = {
 };
 
 export function AppProvider({ children }) {
-  // Ensure migration runs on load/initialization
-  try {
-    storageService.migrate();
-  } catch {
-    // Non-blocking fallback
-  }
+  // Ensure migration runs on load/initialization and capture report
+  const [migrationReport] = useState(() => {
+    try {
+      return storageService.migrate();
+    } catch {
+      return { success: false, warnings: [] };
+    }
+  });
+
+  const migrationWarnings = migrationReport?.warnings || [];
 
   // Load state from storageService (with versioning support)
   const [projects, setProjects] = useState(() => {
@@ -668,6 +672,9 @@ export function AppProvider({ children }) {
       updateCashSettings,
       eventLedger,
       logEvent,
+      migrationReport,
+      migrationWarnings,
+      recordsNeedReview: migrationWarnings.length > 0 || projects.some(p => p.needs_review) || labour.some(l => l.needs_review),
       resetToCleanWorkspace
     }}>
       {children}
