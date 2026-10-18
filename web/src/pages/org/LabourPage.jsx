@@ -29,15 +29,19 @@ export function LabourPage() {
   const totalDailyWageBill = labour.reduce((acc, worker) => {
     const record = dateAttendance.find(a => a.labour_id === worker.id);
     if (!record) return acc;
-    if (record.status === 'PRESENT') return acc + worker.daily_wage;
-    if (record.status === 'HALF_DAY') return acc + (worker.daily_wage / 2);
+    const dailyWage = Number(worker.daily_wage || 0);
+    if (record.status === 'PRESENT') return acc + dailyWage;
+    if (record.status === 'HALF_DAY') return acc + (dailyWage / 2);
     return acc;
   }, 0);
 
   const handleAddWorker = (e) => {
     e.preventDefault();
     if (!newWorkerForm.name.trim()) return;
-    addLabour(newWorkerForm);
+    addLabour({
+      ...newWorkerForm,
+      daily_wage: Number(newWorkerForm.daily_wage) || 0
+    });
     setIsAddWorkerModalOpen(false);
     setNewWorkerForm({ name: '', phone: '', trade: 'Mason Mistri', daily_wage: '850' });
   };
@@ -154,7 +158,8 @@ export function LabourPage() {
                 {labour.map((worker) => {
                   const status = getAttendanceStatus(worker.id);
                   const adv = getAdvancePaid(worker.id);
-                  const earned = status === 'PRESENT' ? worker.daily_wage : status === 'HALF_DAY' ? worker.daily_wage / 2 : 0;
+                  const dailyWage = Number(worker.daily_wage || 0);
+                  const earned = status === 'PRESENT' ? dailyWage : status === 'HALF_DAY' ? dailyWage / 2 : 0;
                   const netPay = Math.max(0, earned - adv);
 
                   return (
