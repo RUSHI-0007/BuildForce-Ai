@@ -396,10 +396,21 @@ describe('Storage Migration Engine (packages/core/src/migration)', () => {
 
       const localRes = migrateLocalStorage(testStorage);
       expect(localRes.success).toBe(true);
-      expect(testStorage.getItem(`${LEGACY_STORAGE_KEYS.DELIVERIES}_v1`)).toBeDefined();
-      expect(testStorage.getItem(`${LEGACY_STORAGE_KEYS.QUOTES}_v1`)).toBeDefined();
-      expect(testStorage.getItem(`${LEGACY_STORAGE_KEYS.RFQS}_v1`)).toBeDefined();
-      expect(testStorage.getItem(`${LEGACY_STORAGE_KEYS.PLAN_VERSIONS}_v1`)).toBeDefined();
+      const delRaw = testStorage.getItem(`${LEGACY_STORAGE_KEYS.DELIVERIES}_v1`);
+      expect(delRaw).not.toBeNull();
+      expect(JSON.parse(delRaw)).toHaveLength(1);
+
+      const qteRaw = testStorage.getItem(`${LEGACY_STORAGE_KEYS.QUOTES}_v1`);
+      expect(qteRaw).not.toBeNull();
+      expect(JSON.parse(qteRaw)).toHaveLength(1);
+
+      const rfqRaw = testStorage.getItem(`${LEGACY_STORAGE_KEYS.RFQS}_v1`);
+      expect(rfqRaw).not.toBeNull();
+      expect(JSON.parse(rfqRaw)).toHaveLength(1);
+
+      const plnRaw = testStorage.getItem(`${LEGACY_STORAGE_KEYS.PLAN_VERSIONS}_v1`);
+      expect(plnRaw).not.toBeNull();
+      expect(JSON.parse(plnRaw)).toHaveLength(1);
     });
   });
 });
