@@ -1,0 +1,12 @@
+{
+  "name": "@buildforce/core",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./agents": "./src/agents/index.js",
+    "./formatters": "./src/formatters/index.js"
+  }
+}
