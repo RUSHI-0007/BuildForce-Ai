@@ -1,13 +1,13 @@
-import React, {} from 'react';
+import React from 'react';
 import { 
   BadgeIndianRupee, TrendingDown, AlertTriangle, 
-  Calendar, ShieldCheck, ArrowRight
+  Calendar, ShieldCheck
 } from 'lucide-react';
 import { useApp } from '../../hooks/useApp';
 import { StatsCard } from '../../components/ui/StatsCard';
 
 export function CashflowPage() {
-  const { payments, setCurrentView, setActiveAgentId } = useApp();
+  const { payments, setCurrentView } = useApp();
 
   const totalInflows = payments
     .filter(p => p.type === 'INCOME' && p.status === 'Received')
@@ -33,29 +33,6 @@ export function CashflowPage() {
             Monitor cash runway, prevent weekly payroll defaults, and sync client milestone disbursements.
           </p>
         </div>
-
-        <button
-          onClick={() => {
-            setActiveAgentId('credit');
-            setCurrentView('agents');
-          }}
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '8px',
-            padding: '9px 18px',
-            background: '#10b981',
-            color: '#ffffff',
-            fontSize: '13px',
-            fontWeight: '600',
-            borderRadius: '8px',
-            border: 'none',
-            cursor: 'pointer'
-          }}
-        >
-          <span>Ask AI Credit Advisor</span>
-          <ArrowRight size={14} />
-        </button>
       </div>
 
       {/* Stats Cards */}
