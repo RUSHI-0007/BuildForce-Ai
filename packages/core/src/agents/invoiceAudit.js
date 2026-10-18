@@ -77,14 +77,31 @@ export function auditInvoice3Way(invoice, purchaseOrder = null, delivery = null,
     });
   }
 
-  approvedPayable = Math.max(0, approvedPayable);
+  const isMissingDoc = !purchaseOrder || !delivery;
+  if (isMissingDoc) {
+    approvedPayable = 0;
+    amountHeld = invoiceAmount;
+  } else {
+    approvedPayable = Math.max(0, approvedPayable);
+  }
+
+  let status;
+  if (isMissingDoc) {
+    status = 'Needs review';
+  } else if (discrepancies.length === 0) {
+    status = 'CLEAN_MATCH';
+  } else if (approvedPayable > 0) {
+    status = 'PARTIAL_HOLD';
+  } else {
+    status = 'REJECTED';
+  }
 
   return {
     invoiceId: invoice.id || invoice.invoice_no,
     invoiceAmount,
     approvedPayable,
     amountHeld,
-    status: discrepancies.length === 0 ? 'CLEAN_MATCH' : (approvedPayable > 0 ? 'PARTIAL_HOLD' : 'REJECTED'),
+    status,
     poMatched,
     deliveryMatched,
     discrepancies

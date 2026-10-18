@@ -334,7 +334,7 @@ export function validateInvoice(input = {}) {
     errors.push('Invoice total must be a non-negative number');
   }
 
-  const validStatuses = ['CLEAN_MATCH', 'PARTIAL_HOLD', 'REJECTED'];
+  const validStatuses = ['CLEAN_MATCH', 'PARTIAL_HOLD', 'REJECTED', 'Needs review'];
   const status = input.status || 'CLEAN_MATCH';
   if (!validStatuses.includes(status)) {
     errors.push(`Invoice status must be one of: ${validStatuses.join(', ')}`);

@@ -37,4 +37,30 @@ describe('Invoice Audit Engine (packages/core/src/agents/invoiceAudit.js)', () =
     expect(audit.amountHeld).toBe(0);
     expect(audit.approvedPayable).toBe(50500);
   });
+
+  describe('ISSUE-004 Regression: Missing PO or Delivery Challan handling', () => {
+    it('holds full invoice, sets approvedPayable to 0, and status to "Needs review" when PO is missing', () => {
+      const invoice = { id: 'inv-no-po', total: 75000 };
+      const delivery = { id: 'dc-1', lines: [] };
+
+      const audit = auditInvoice3Way(invoice, null, delivery);
+      expect(audit.approvedPayable).toBe(0);
+      expect(audit.amountHeld).toBe(75000);
+      expect(audit.status).toBe('Needs review');
+      expect(audit.poMatched).toBe(false);
+      expect(audit.discrepancies.some(d => d.type === 'MISSING_PO')).toBe(true);
+    });
+
+    it('holds full invoice, sets approvedPayable to 0, and status to "Needs review" when delivery challan is missing', () => {
+      const invoice = { id: 'inv-no-dc', total: 60000 };
+      const po = { id: 'po-1', total: 60000 };
+
+      const audit = auditInvoice3Way(invoice, po, null);
+      expect(audit.approvedPayable).toBe(0);
+      expect(audit.amountHeld).toBe(60000);
+      expect(audit.status).toBe('Needs review');
+      expect(audit.deliveryMatched).toBe(false);
+      expect(audit.discrepancies.some(d => d.type === 'MISSING_DELIVERY')).toBe(true);
+    });
+  });
 });
