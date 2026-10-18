@@ -98,7 +98,8 @@ export function AppProvider({ children }) {
 
   // Load state from storageService (with versioning support)
   const [projects, setProjects] = useState(() => {
-    return storageService.get(STORAGE_KEYS.PROJECTS, [INITIAL_PROJECT]);
+    const saved = storageService.get(STORAGE_KEYS.PROJECTS, null);
+    return Array.isArray(saved) && saved.length > 0 ? saved : [INITIAL_PROJECT];
   });
 
   const [activeProjectId, setActiveProjectId] = useState(() => {
@@ -106,34 +107,41 @@ export function AppProvider({ children }) {
   });
 
   const [tasks, setTasks] = useState(() => {
-    return storageService.get(STORAGE_KEYS.TASKS, INITIAL_TASKS);
+    const saved = storageService.get(STORAGE_KEYS.TASKS, null);
+    return Array.isArray(saved) && saved.length > 0 ? saved : INITIAL_TASKS;
   });
 
   const [issues, setIssues] = useState(() => {
-    return storageService.get(STORAGE_KEYS.ISSUES, INITIAL_ISSUES);
+    const saved = storageService.get(STORAGE_KEYS.ISSUES, null);
+    return Array.isArray(saved) && saved.length > 0 ? saved : INITIAL_ISSUES;
   });
 
   const [materials, setMaterials] = useState(() => {
-    return storageService.get(STORAGE_KEYS.MATERIALS, INITIAL_MATERIALS);
+    const saved = storageService.get(STORAGE_KEYS.MATERIALS, null);
+    return Array.isArray(saved) && saved.length > 0 ? saved : INITIAL_MATERIALS;
   });
 
   const [materialTransactions, setMaterialTransactions] = useState(() => {
-    return storageService.get(STORAGE_KEYS.MATERIAL_TX, [
+    const saved = storageService.get(STORAGE_KEYS.MATERIAL_TX, null);
+    return Array.isArray(saved) && saved.length > 0 ? saved : [
       { id: 'tx_1', project_id: 'site_101', item_id: 'mat_1', item_name: 'UltraTech Cement (50kg)', type: 'INWARD', quantity: 200, date: '2026-10-10', receiver: 'Santosh' },
       { id: 'tx_2', project_id: 'site_101', item_id: 'mat_1', item_name: 'UltraTech Cement (50kg)', type: 'OUTWARD', quantity: 60, date: '2026-10-15', receiver: 'Ramesh Mistri' }
-    ]);
+    ];
   });
 
   const [labour, setLabour] = useState(() => {
-    return storageService.get(STORAGE_KEYS.LABOUR, INITIAL_LABOUR);
+    const saved = storageService.get(STORAGE_KEYS.LABOUR, null);
+    return Array.isArray(saved) && saved.length > 0 ? saved : INITIAL_LABOUR;
   });
 
   const [attendance, setAttendance] = useState(() => {
-    return storageService.get(STORAGE_KEYS.ATTENDANCE, INITIAL_ATTENDANCE);
+    const saved = storageService.get(STORAGE_KEYS.ATTENDANCE, null);
+    return Array.isArray(saved) && saved.length > 0 ? saved : INITIAL_ATTENDANCE;
   });
 
   const [payments, setPayments] = useState(() => {
-    return storageService.get(STORAGE_KEYS.PAYMENTS, INITIAL_PAYMENTS);
+    const saved = storageService.get(STORAGE_KEYS.PAYMENTS, null);
+    return Array.isArray(saved) && saved.length > 0 ? saved : INITIAL_PAYMENTS;
   });
 
   // New Phase 2 entities
@@ -417,15 +425,23 @@ export function AppProvider({ children }) {
       date: txData.date || new Date().toISOString().split('T')[0],
       receiver: txData.receiver || 'Site Mistri'
     };
-    setMaterialTransactions(prev => [newTx, ...prev]);
+    setMaterialTransactions(prev => {
+      const nextTx = [newTx, ...prev];
+      storageService.set(STORAGE_KEYS.MATERIAL_TX, nextTx);
+      return nextTx;
+    });
 
-    setMaterials(prev => prev.map(m => {
-      if (m.id === txData.item_id) {
-        const change = txData.type === 'INWARD' ? Number(txData.quantity) : -Number(txData.quantity);
-        return { ...m, in_stock: Math.max(0, m.in_stock + change) };
-      }
-      return m;
-    }));
+    setMaterials(prev => {
+      const nextMats = prev.map(m => {
+        if (m.id === txData.item_id) {
+          const change = txData.type === 'INWARD' ? Number(txData.quantity) : -Number(txData.quantity);
+          return { ...m, in_stock: Math.max(0, m.in_stock + change) };
+        }
+        return m;
+      });
+      storageService.set(STORAGE_KEYS.MATERIALS, nextMats);
+      return nextMats;
+    });
     logEvent('MATERIAL_TRANSACTION_RECORDED', newTx);
   };
 
@@ -568,8 +584,57 @@ export function AppProvider({ children }) {
       received_by: deliveryData.received_by || 'Site Incharge',
       notes: deliveryData.notes || ''
     };
-    setDeliveries(prev => [newDelivery, ...prev]);
+    const nextDeliveries = [newDelivery, ...deliveries];
+    setDeliveries(nextDeliveries);
+    storageService.set(STORAGE_KEYS.DELIVERIES, nextDeliveries);
     logEvent('DELIVERY_RECORDED', newDelivery);
+
+    // Record INWARD material transactions and increment material stock
+    if (Array.isArray(newDelivery.items) && newDelivery.items.length > 0) {
+      const inwardTransactions = [];
+      const stockIncrements = new Map();
+
+      newDelivery.items.forEach((item, index) => {
+        const matId = item.material_id || item.item_id;
+        const qty = Number(item.quantity ?? item.qty ?? 0);
+        if (matId && qty > 0) {
+          const matchedMat = materials.find(m => m.id === matId);
+          inwardTransactions.push({
+            id: `tx_in_${Date.now()}_${index}`,
+            project_id: newDelivery.project_id || activeProjectId,
+            item_id: matId,
+            item_name: item.material_name || item.name || matchedMat?.name || 'Material Item',
+            type: 'INWARD',
+            quantity: qty,
+            date: newDelivery.delivery_date,
+            receiver: newDelivery.received_by || 'Site Incharge',
+            challan_no: newDelivery.challan_no,
+            po_id: newDelivery.po_id
+          });
+          stockIncrements.set(matId, (stockIncrements.get(matId) || 0) + qty);
+        }
+      });
+
+      if (inwardTransactions.length > 0) {
+        const nextTx = [...inwardTransactions, ...materialTransactions];
+        setMaterialTransactions(nextTx);
+        storageService.set(STORAGE_KEYS.MATERIAL_TX, nextTx);
+
+        const nextMats = materials.map(m => {
+          if (stockIncrements.has(m.id)) {
+            return { ...m, in_stock: (Number(m.in_stock) || 0) + stockIncrements.get(m.id) };
+          }
+          return m;
+        });
+        setMaterials(nextMats);
+        storageService.set(STORAGE_KEYS.MATERIALS, nextMats);
+
+        inwardTransactions.forEach(tx => {
+          logEvent('MATERIAL_TRANSACTION_RECORDED', tx);
+        });
+      }
+    }
+
     return newDelivery;
   };
 

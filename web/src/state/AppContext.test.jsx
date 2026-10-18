@@ -172,6 +172,47 @@ describe('AppContext - Migration, New Entities & Event Ledger Persistence', () =
     expect(ledger.some(e => e.type === 'PLAN_VERSION_COMMITTED')).toBe(true);
   });
 
+  it('records an INWARD material transaction and increases stock when addDelivery is called', () => {
+    const contextValue = renderWithContext();
+    const initialMat = contextValue.materials.find(m => m.id === 'mat_1');
+    const initialStock = initialMat.in_stock;
+
+    const delivery = contextValue.addDelivery({
+      challan_no: 'CH-DEL-INWARD-1',
+      items: [{ material_id: 'mat_1', quantity: 60 }]
+    });
+
+    expect(delivery.challan_no).toBe('CH-DEL-INWARD-1');
+
+    // 1. Event ledger recorded the INWARD material transaction
+    const txEvents = contextValue.eventLedger.getByType('MATERIAL_TRANSACTION_RECORDED');
+    const inwardEvent = txEvents.find(e => e.payload.challan_no === 'CH-DEL-INWARD-1');
+    expect(inwardEvent).toBeDefined();
+    expect(inwardEvent.payload.type).toBe('INWARD');
+    expect(inwardEvent.payload.item_id).toBe('mat_1');
+    expect(inwardEvent.payload.quantity).toBe(60);
+
+    // 2. Storage holds the INWARD material transaction
+    const storedTx = JSON.parse(mockStorage.getItem(`${STORAGE_KEYS.MATERIAL_TX}_v1`));
+    const tx = storedTx.find(t => t.challan_no === 'CH-DEL-INWARD-1');
+    expect(tx).toBeDefined();
+    expect(tx.type).toBe('INWARD');
+    expect(tx.quantity).toBe(60);
+
+    // 3. Stock increases in storage
+    const storedMats = JSON.parse(mockStorage.getItem(`${STORAGE_KEYS.MATERIALS}_v1`));
+    const matInStore = storedMats.find(m => m.id === 'mat_1');
+    expect(matInStore.in_stock).toBe(initialStock + 60);
+
+    // 4. Reloaded context reflects the increased stock and inward transaction
+    const reloadedContext = renderWithContext();
+    const reloadedMat = reloadedContext.materials.find(m => m.id === 'mat_1');
+    expect(reloadedMat.in_stock).toBe(initialStock + 60);
+    const reloadedTx = reloadedContext.materialTransactions.find(t => t.challan_no === 'CH-DEL-INWARD-1');
+    expect(reloadedTx).toBeDefined();
+    expect(reloadedTx.type).toBe('INWARD');
+  });
+
   it('creates tasks with complete Phase 3 fields (start_date, duration_days, depends_on, weight, progress_pct, material_needs)', () => {
     const contextValue = renderWithContext();
 
