@@ -35,4 +35,39 @@ describe('Scheduler Agent Logic (packages/core/src/agents/scheduler.js)', () => 
     expect(scurve.actualProgress).toBe(50); // (1 + 0.5) / 3 = 50%
     expect(typeof scurve.spi).toBe('number');
   });
+
+  describe('ISSUE-003 Regression: Topological Sort & Circular Dependencies in calculateCPM', () => {
+    it('returns a clear error when tasks contain a circular dependency', () => {
+      const circularTasks = [
+        { id: 't1', name: 'Task 1', duration_days: 5, depends_on: ['t3'] },
+        { id: 't2', name: 'Task 2', duration_days: 3, depends_on: ['t1'] },
+        { id: 't3', name: 'Task 3', duration_days: 4, depends_on: ['t2'] }
+      ];
+
+      const result = calculateCPM(circularTasks);
+      expect(result.error).toBeDefined();
+      expect(result.error).toMatch(/circular dependency/i);
+      expect(result.criticalPathTaskIds).toEqual([]);
+      expect(result.totalDurationDays).toBe(0);
+    });
+
+    it('topologically sorts tasks regardless of input order and produces correct schedule metrics', () => {
+      // Reverse order of sampleTasks: t4, t3, t2, t1
+      const reversedTasks = [
+        { id: 't4', name: 'Slab Casting', duration_days: 6, depends_on: ['t2'] },
+        { id: 't3', name: 'Plumbing Non-Critical', duration_days: 3, depends_on: ['t1'] },
+        { id: 't2', name: 'Columns', duration_days: 8, depends_on: ['t1'] },
+        { id: 't1', name: 'Foundation', duration_days: 10, depends_on: [] }
+      ];
+
+      const cpm = calculateCPM(reversedTasks);
+      expect(cpm.error).toBeUndefined();
+      expect(cpm.totalDurationDays).toBe(24);
+      expect(cpm.criticalPathTaskIds).toEqual(['t1', 't2', 't4']);
+
+      const t4 = cpm.tasksWithFloat.find(t => t.id === 't4');
+      expect(t4.earlyStart).toBe(18); // 10 + 8
+      expect(t4.earlyFinish).toBe(24);
+    });
+  });
 });

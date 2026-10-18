@@ -14,8 +14,11 @@ export function calculateCPM(tasks = []) {
     return { tasksWithFloat: [], criticalPathTaskIds: [], totalDurationDays: 0 };
   }
 
-  // Build task map
+  // Build task map and dependency graph
   const taskMap = new Map();
+  const adj = new Map(); // pred -> successors
+  const inDegree = new Map();
+
   tasks.forEach(t => {
     taskMap.set(t.id, {
       ...t,
@@ -28,11 +31,54 @@ export function calculateCPM(tasks = []) {
       totalFloat: 0,
       isCritical: false
     });
+    adj.set(t.id, []);
   });
 
-  // Forward Pass (Early Start, Early Finish)
-  let maxProjectDuration = 0;
+  // Calculate in-degrees and build adjacency list
   taskMap.forEach(task => {
+    const validPreds = task.dependsOn.filter(predId => taskMap.has(predId));
+    inDegree.set(task.id, validPreds.length);
+    validPreds.forEach(predId => {
+      adj.get(predId).push(task.id);
+    });
+  });
+
+  // Topological sort via Kahn's algorithm
+  const queue = [];
+  taskMap.forEach((_, id) => {
+    if (inDegree.get(id) === 0) {
+      queue.push(id);
+    }
+  });
+
+  const sortedTasks = [];
+  while (queue.length > 0) {
+    const currId = queue.shift();
+    sortedTasks.push(taskMap.get(currId));
+
+    (adj.get(currId) || []).forEach(succId => {
+      const remainingInDegree = inDegree.get(succId) - 1;
+      inDegree.set(succId, remainingInDegree);
+      if (remainingInDegree === 0) {
+        queue.push(succId);
+      }
+    });
+  }
+
+  // Detect circular dependency
+  if (sortedTasks.length < taskMap.size) {
+    const cycleTaskIds = Array.from(taskMap.keys()).filter(id => inDegree.get(id) > 0);
+    return {
+      error: `Circular dependency detected involving tasks: ${cycleTaskIds.join(', ')}`,
+      tasksWithFloat: [],
+      criticalPathTaskIds: [],
+      totalDurationDays: 0
+    };
+  }
+
+  // Forward Pass (Early Start, Early Finish) in topological order
+  let maxProjectDuration = 0;
+  sortedTasks.forEach(task => {
     let maxPredecessorEF = 0;
     task.dependsOn.forEach(predId => {
       const pred = taskMap.get(predId);
@@ -48,16 +94,15 @@ export function calculateCPM(tasks = []) {
     }
   });
 
-  // Backward Pass (Late Start, Late Finish)
-  taskMap.forEach(task => {
+  // Backward Pass (Late Start, Late Finish) in reverse topological order
+  sortedTasks.forEach(task => {
     task.lateFinish = maxProjectDuration;
     task.lateStart = task.lateFinish - task.duration;
   });
 
-  const reversedTasks = Array.from(taskMap.values()).reverse();
-  reversedTasks.forEach(task => {
-    // Find tasks that depend on this task (successors)
-    const successors = Array.from(taskMap.values()).filter(t => t.dependsOn.includes(task.id));
+  const reverseSorted = [...sortedTasks].reverse();
+  reverseSorted.forEach(task => {
+    const successors = (adj.get(task.id) || []).map(id => taskMap.get(id));
     if (successors.length > 0) {
       const minSuccessorLS = Math.min(...successors.map(s => s.lateStart));
       task.lateFinish = minSuccessorLS;
@@ -68,7 +113,7 @@ export function calculateCPM(tasks = []) {
     task.isCritical = task.totalFloat === 0;
   });
 
-  const tasksWithFloat = Array.from(taskMap.values());
+  const tasksWithFloat = sortedTasks;
   const criticalPathTaskIds = tasksWithFloat.filter(t => t.isCritical).map(t => t.id);
 
   return {
