@@ -62,7 +62,18 @@ describe('EventLedger & EventBus (packages/core/src/agents/bus.js)', () => {
 
     it('moves max depth to config and respects BUS_CONFIG.MAX_CHAIN_DEPTH by default and via options', () => {
       expect(BUS_CONFIG).toBeDefined();
-      expect(BUS_CONFIG.MAX_CHAIN_DEPTH).toBe(10);
+      expect(BUS_CONFIG.MAX_CHAIN_DEPTH).toBe(4);
+
+      // Verify default bus instance enforces depth 4
+      const defaultBus = createEventBus();
+      defaultBus.subscribe('S1', () => defaultBus.publish('S2'));
+      defaultBus.subscribe('S2', () => defaultBus.publish('S3'));
+      defaultBus.subscribe('S3', () => defaultBus.publish('S4'));
+      defaultBus.subscribe('S4', () => defaultBus.publish('S5'));
+
+      expect(() => {
+        defaultBus.publish('S1');
+      }).toThrow(/Max event chain depth of 4 exceeded/);
 
       // Verify custom config object override
       const busWithConfig = createEventBus({ config: { maxChainDepth: 2 } });

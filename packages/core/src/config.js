@@ -5,7 +5,7 @@
  */
 
 export const BUS_CONFIG = Object.freeze({
-  MAX_CHAIN_DEPTH: 10
+  MAX_CHAIN_DEPTH: 4
 });
 
 export const DEFAULT_MAX_CHAIN_DEPTH = BUS_CONFIG.MAX_CHAIN_DEPTH;
