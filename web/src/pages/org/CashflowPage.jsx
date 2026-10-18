@@ -3,24 +3,26 @@ import {
   BadgeIndianRupee, TrendingDown, AlertTriangle, 
   Calendar, ShieldCheck
 } from 'lucide-react';
+import { calculateCashRunway } from '@buildforce/core';
 import { useApp } from '../../hooks/useApp';
 import { StatsCard } from '../../components/ui/StatsCard';
 
 export function CashflowPage() {
-  const { payments, setCurrentView } = useApp();
+  const { payments = [], labour = [], cashSettings, setCurrentView } = useApp();
 
-  const totalInflows = payments
-    .filter(p => p.type === 'INCOME' && p.status === 'Received')
-    .reduce((acc, p) => acc + (Number(p.amount) || 0), 0);
+  const cashPlan = calculateCashRunway({
+    payments,
+    labour,
+    cashSettings: cashSettings || { wageReserveWeeks: 2, openingBalance: 0, overheadPerWeek: 15000 }
+  });
 
-  const totalOutflows = payments
-    .filter(p => p.type === 'EXPENSE')
-    .reduce((acc, p) => acc + (Number(p.amount) || 0), 0);
-
-  const netLiquidity = totalInflows - totalOutflows;
-  const isOverdrawn = netLiquidity < 0;
-  const avgWeeklyBurn = 125000; // ~1.25L per week for labour + basic materials
-  const runwayWeeks = netLiquidity > 0 ? (netLiquidity / avgWeeklyBurn).toFixed(1) : 0;
+  const {
+    currentCash,
+    totalOutflows,
+    runwayWeeks,
+    isOverdrawn,
+    totalWeeklyObligation
+  } = cashPlan;
 
   return (
     <div style={{ padding: '24px', maxWidth: '1400px', margin: '0 auto' }}>
@@ -39,7 +41,7 @@ export function CashflowPage() {
       <div style={{ display: 'flex', gap: '16px', marginBottom: '24px', flexWrap: 'wrap' }}>
         <StatsCard 
           title="Current Available Cash" 
-          value={`₹${(netLiquidity / 100000).toFixed(2)} Lakhs`} 
+          value={`₹${(currentCash / 100000).toFixed(2)} Lakhs`} 
           subtitle="Cleared balance across active accounts" 
           icon={BadgeIndianRupee} 
           color={isOverdrawn ? '#dc2626' : '#16a34a'} 
@@ -47,9 +49,9 @@ export function CashflowPage() {
         <StatsCard 
           title="Estimated Runway" 
           value={isOverdrawn ? 'Overdrawn' : `${runwayWeeks} Weeks`} 
-          subtitle={isOverdrawn ? 'Immediate capital required' : 'Based on ~₹1.25L weekly site burn'} 
+          subtitle={isOverdrawn ? 'Immediate capital required' : `Based on ~₹${Math.round(totalWeeklyObligation).toLocaleString('en-IN')} weekly obligation`} 
           icon={Calendar} 
-          color={isOverdrawn ? '#dc2626' : (Number(runwayWeeks) >= 4 ? '#2563eb' : '#dc2626')} 
+          color={isOverdrawn ? '#dc2626' : (runwayWeeks >= 4 ? '#2563eb' : '#dc2626')} 
         />
         <StatsCard 
           title="Total Outflows (Materials + Wages)" 
@@ -62,9 +64,9 @@ export function CashflowPage() {
 
       {/* Runway Alert Box */}
       <div style={{
-        background: isOverdrawn ? '#fef2f2' : (Number(runwayWeeks) >= 3 ? '#f0fdf4' : '#fffbeb'),
+        background: isOverdrawn ? '#fef2f2' : (runwayWeeks >= 3 ? '#f0fdf4' : '#fffbeb'),
         border: '1px solid',
-        borderColor: isOverdrawn ? '#fecaca' : (Number(runwayWeeks) >= 3 ? '#bbf7d0' : '#fef08a'),
+        borderColor: isOverdrawn ? '#fecaca' : (runwayWeeks >= 3 ? '#bbf7d0' : '#fef08a'),
         borderRadius: '12px',
         padding: '18px 22px',
         marginBottom: '24px',
@@ -77,7 +79,7 @@ export function CashflowPage() {
         <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
           {isOverdrawn ? (
             <AlertTriangle size={28} style={{ color: '#dc2626' }} />
-          ) : Number(runwayWeeks) >= 3 ? (
+          ) : runwayWeeks >= 3 ? (
             <ShieldCheck size={28} style={{ color: '#16a34a' }} />
           ) : (
             <AlertTriangle size={28} style={{ color: '#d97706' }} />
@@ -86,13 +88,13 @@ export function CashflowPage() {
             <div style={{ fontSize: '15px', fontWeight: '700', color: '#0f172a', marginBottom: '2px' }}>
               {isOverdrawn 
                 ? 'Critical Warning: Account Overdrawn' 
-                : (Number(runwayWeeks) >= 3 
+                : (runwayWeeks >= 3 
                   ? 'Healthy Cashflow Status: Operations Fully Funded' 
                   : 'Attention Needed: Client Milestone Billing Recommended')}
             </div>
             <div style={{ fontSize: '13px', color: '#475569' }}>
               {isOverdrawn
-                ? `Site expenses exceed cash inflows by ₹${Math.abs(netLiquidity).toLocaleString('en-IN')}. Immediate milestone billing or capital infusion is required.`
+                ? `Site expenses exceed cash inflows by ₹${Math.abs(currentCash).toLocaleString('en-IN')}. Immediate milestone billing or capital infusion is required.`
                 : `Your current working capital covers approximately ${runwayWeeks} weeks of routine labour wages and urgent cement/steel procurements.`}
             </div>
           </div>
