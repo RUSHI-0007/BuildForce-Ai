@@ -41,4 +41,13 @@ export const storageService = {
   }
 };
 
+// Auto-run migration on load
+if (typeof window !== 'undefined' && typeof localStorage !== 'undefined') {
+  try {
+    storageService.migrate();
+  } catch {
+    // non-blocking fallback
+  }
+}
+
 export default storageService;

@@ -43,9 +43,16 @@ function deepFreeze(obj) {
  * Explicitly does not expose update, delete, remove, clear, or modify.
  * @returns {EventLedger}
  */
-export function createEventLedger() {
+export function createEventLedger(initialEntries = []) {
   /** @type {Array<Object>} */
   const entries = [];
+  if (Array.isArray(initialEntries)) {
+    for (const item of initialEntries) {
+      if (item && typeof item === 'object' && item.type) {
+        entries.push(deepFreeze({ ...item }));
+      }
+    }
+  }
 
   const ledger = {
     /**

@@ -1,18 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { createEventLedger } from '@buildforce/core';
 import api from '../services/httpClient';
-import { AppContext } from './appContextInstance';
-
-const STORAGE_KEYS = {
-  PROJECTS: 'buildsite_projects',
-  TASKS: 'buildsite_tasks',
-  ISSUES: 'buildsite_issues',
-  MATERIALS: 'buildsite_materials',
-  MATERIAL_TX: 'buildsite_material_tx',
-  LABOUR: 'buildsite_labour',
-  ATTENDANCE: 'buildsite_attendance',
-  PAYMENTS: 'buildsite_payments',
-  ACTIVE_PROJECT_ID: 'buildsite_active_project_id'
-};
+import storageService from '../services/storage';
+import { AppContext, STORAGE_KEYS } from './appContextInstance';
 
 // Clean, realistic minimal starter project for small contractor
 const INITIAL_PROJECT = {
@@ -71,72 +61,140 @@ const INITIAL_PAYMENTS = [
   { id: 'pay_5', project_id: 'site_101', milestone: 'Weekly Labour Wages', amount: 48500, type: 'EXPENSE', date: '2026-10-12', status: 'Paid', mode: 'Cash/UPI' }
 ];
 
+const INITIAL_DEALERS = [
+  { id: 'dlr_1', name: 'Shinde Traders & Hardware', phone: '9822001122', city: 'Pune', rating: 4.8 }
+];
+
+const INITIAL_INVOICES = [
+  { id: 'inv_1', invoice_no: 'INV-2026-001', dealer_id: 'dlr_1', total: 45000, status: 'CLEAN_MATCH', due_date: '2026-10-30', lines: [] }
+];
+
+const INITIAL_PURCHASE_ORDERS = [
+  { id: 'po_1', project_id: 'site_101', dealer_id: 'dlr_1', po_number: 'PO-2026-01', total_amount: 45000, status: 'Approved' }
+];
+
+const INITIAL_PROPOSALS = [
+  { id: 'prop_1', project_id: 'site_101', title: 'Substructure Quote', client_name: 'Dr. Rahul Kulkarni', amount: 1200000, status: 'Draft' }
+];
+
+const INITIAL_CASH_SETTINGS = {
+  openingBalance: 150000,
+  wagePayWeekday: 6,
+  overheadPerWeek: 15000,
+  wageReserveWeeks: 2
+};
+
 export function AppProvider({ children }) {
-  // Load state from localStorage or use initial clean data
+  // Ensure migration runs on load/initialization
+  try {
+    storageService.migrate();
+  } catch {
+    // Non-blocking fallback
+  }
+
+  // Load state from storageService (with versioning support)
   const [projects, setProjects] = useState(() => {
-    const saved = localStorage.getItem(STORAGE_KEYS.PROJECTS);
-    return saved ? JSON.parse(saved) : [INITIAL_PROJECT];
+    return storageService.get(STORAGE_KEYS.PROJECTS, [INITIAL_PROJECT]);
   });
 
   const [activeProjectId, setActiveProjectId] = useState(() => {
-    const saved = localStorage.getItem(STORAGE_KEYS.ACTIVE_PROJECT_ID);
-    return saved || 'site_101';
+    return storageService.get(STORAGE_KEYS.ACTIVE_PROJECT_ID, 'site_101');
   });
 
   const [tasks, setTasks] = useState(() => {
-    const saved = localStorage.getItem(STORAGE_KEYS.TASKS);
-    return saved ? JSON.parse(saved) : INITIAL_TASKS;
+    return storageService.get(STORAGE_KEYS.TASKS, INITIAL_TASKS);
   });
 
   const [issues, setIssues] = useState(() => {
-    const saved = localStorage.getItem(STORAGE_KEYS.ISSUES);
-    return saved ? JSON.parse(saved) : INITIAL_ISSUES;
+    return storageService.get(STORAGE_KEYS.ISSUES, INITIAL_ISSUES);
   });
 
   const [materials, setMaterials] = useState(() => {
-    const saved = localStorage.getItem(STORAGE_KEYS.MATERIALS);
-    return saved ? JSON.parse(saved) : INITIAL_MATERIALS;
+    return storageService.get(STORAGE_KEYS.MATERIALS, INITIAL_MATERIALS);
   });
 
   const [materialTransactions, setMaterialTransactions] = useState(() => {
-    const saved = localStorage.getItem(STORAGE_KEYS.MATERIAL_TX);
-    return saved ? JSON.parse(saved) : [
+    return storageService.get(STORAGE_KEYS.MATERIAL_TX, [
       { id: 'tx_1', project_id: 'site_101', item_id: 'mat_1', item_name: 'UltraTech Cement (50kg)', type: 'INWARD', quantity: 200, date: '2026-10-10', receiver: 'Santosh' },
       { id: 'tx_2', project_id: 'site_101', item_id: 'mat_1', item_name: 'UltraTech Cement (50kg)', type: 'OUTWARD', quantity: 60, date: '2026-10-15', receiver: 'Ramesh Mistri' }
-    ];
+    ]);
   });
 
   const [labour, setLabour] = useState(() => {
-    const saved = localStorage.getItem(STORAGE_KEYS.LABOUR);
-    return saved ? JSON.parse(saved) : INITIAL_LABOUR;
+    return storageService.get(STORAGE_KEYS.LABOUR, INITIAL_LABOUR);
   });
 
   const [attendance, setAttendance] = useState(() => {
-    const saved = localStorage.getItem(STORAGE_KEYS.ATTENDANCE);
-    return saved ? JSON.parse(saved) : INITIAL_ATTENDANCE;
+    return storageService.get(STORAGE_KEYS.ATTENDANCE, INITIAL_ATTENDANCE);
   });
 
   const [payments, setPayments] = useState(() => {
-    const saved = localStorage.getItem(STORAGE_KEYS.PAYMENTS);
-    return saved ? JSON.parse(saved) : INITIAL_PAYMENTS;
+    return storageService.get(STORAGE_KEYS.PAYMENTS, INITIAL_PAYMENTS);
   });
 
-  // Current view navigation: 'sites', 'site_dashboard', 'tasks', 'issues', 'payments', 'drive', 'materials', 'labour', 'cashflow', 'library', 'reports', 'settings', 'agents'
+  // New Phase 2 entities
+  const [dealers, setDealers] = useState(() => {
+    return storageService.get(STORAGE_KEYS.DEALERS, INITIAL_DEALERS);
+  });
+
+  const [invoices, setInvoices] = useState(() => {
+    return storageService.get(STORAGE_KEYS.INVOICES, INITIAL_INVOICES);
+  });
+
+  const [purchaseOrders, setPurchaseOrders] = useState(() => {
+    return storageService.get(STORAGE_KEYS.PURCHASE_ORDERS, INITIAL_PURCHASE_ORDERS);
+  });
+
+  const [proposals, setProposals] = useState(() => {
+    return storageService.get(STORAGE_KEYS.PROPOSALS, INITIAL_PROPOSALS);
+  });
+
+  const [cashSettings, setCashSettings] = useState(() => {
+    return storageService.get(STORAGE_KEYS.CASH_SETTINGS, INITIAL_CASH_SETTINGS);
+  });
+
+  // Append-only Event Ledger instance
+  const [eventLedger] = useState(() => {
+    const savedLog = storageService.get(STORAGE_KEYS.EVENT_LOG, []);
+    return createEventLedger(Array.isArray(savedLog) ? savedLog : []);
+  });
+
+  // Current view navigation
   const [currentView, setCurrentView] = useState('sites');
   const [activeAgentId, setActiveAgentId] = useState('estimator');
 
-  // Sync to localStorage
-  useEffect(() => { localStorage.setItem(STORAGE_KEYS.PROJECTS, JSON.stringify(projects)); }, [projects]);
-  useEffect(() => { localStorage.setItem(STORAGE_KEYS.ACTIVE_PROJECT_ID, activeProjectId || ''); }, [activeProjectId]);
-  useEffect(() => { localStorage.setItem(STORAGE_KEYS.TASKS, JSON.stringify(tasks)); }, [tasks]);
-  useEffect(() => { localStorage.setItem(STORAGE_KEYS.ISSUES, JSON.stringify(issues)); }, [issues]);
-  useEffect(() => { localStorage.setItem(STORAGE_KEYS.MATERIALS, JSON.stringify(materials)); }, [materials]);
-  useEffect(() => { localStorage.setItem(STORAGE_KEYS.MATERIAL_TX, JSON.stringify(materialTransactions)); }, [materialTransactions]);
-  useEffect(() => { localStorage.setItem(STORAGE_KEYS.LABOUR, JSON.stringify(labour)); }, [labour]);
-  useEffect(() => { localStorage.setItem(STORAGE_KEYS.ATTENDANCE, JSON.stringify(attendance)); }, [attendance]);
-  useEffect(() => { localStorage.setItem(STORAGE_KEYS.PAYMENTS, JSON.stringify(payments)); }, [payments]);
+  // Persistence effects
+  useEffect(() => { storageService.set(STORAGE_KEYS.PROJECTS, projects); }, [projects]);
+  useEffect(() => { storageService.set(STORAGE_KEYS.ACTIVE_PROJECT_ID, activeProjectId || ''); }, [activeProjectId]);
+  useEffect(() => { storageService.set(STORAGE_KEYS.TASKS, tasks); }, [tasks]);
+  useEffect(() => { storageService.set(STORAGE_KEYS.ISSUES, issues); }, [issues]);
+  useEffect(() => { storageService.set(STORAGE_KEYS.MATERIALS, materials); }, [materials]);
+  useEffect(() => { storageService.set(STORAGE_KEYS.MATERIAL_TX, materialTransactions); }, [materialTransactions]);
+  useEffect(() => { storageService.set(STORAGE_KEYS.LABOUR, labour); }, [labour]);
+  useEffect(() => { storageService.set(STORAGE_KEYS.ATTENDANCE, attendance); }, [attendance]);
+  useEffect(() => { storageService.set(STORAGE_KEYS.PAYMENTS, payments); }, [payments]);
+  useEffect(() => { storageService.set(STORAGE_KEYS.DEALERS, dealers); }, [dealers]);
+  useEffect(() => { storageService.set(STORAGE_KEYS.INVOICES, invoices); }, [invoices]);
+  useEffect(() => { storageService.set(STORAGE_KEYS.PURCHASE_ORDERS, purchaseOrders); }, [purchaseOrders]);
+  useEffect(() => { storageService.set(STORAGE_KEYS.PROPOSALS, proposals); }, [proposals]);
+  useEffect(() => { storageService.set(STORAGE_KEYS.CASH_SETTINGS, cashSettings); }, [cashSettings]);
 
-  // Try sync with real backend if backend server is configured & running
+  // Log event helper for state mutations
+  const logEvent = (type, payload = {}) => {
+    try {
+      const evt = eventLedger.append({
+        type,
+        payload,
+        project_id: activeProjectId
+      });
+      storageService.set(STORAGE_KEYS.EVENT_LOG, eventLedger.read());
+      return evt;
+    } catch {
+      return null;
+    }
+  };
+
+  // Backend sync
   useEffect(() => {
     if (!api.defaults.baseURL) return;
     let isMounted = true;
@@ -147,7 +205,7 @@ export function AppProvider({ children }) {
         }
       })
       .catch(() => {
-        // Backend not configured or offline - fallback to local storage
+        // Backend offline fallback
       });
     return () => { isMounted = false; };
   }, []);
@@ -171,8 +229,8 @@ export function AppProvider({ children }) {
 
     setProjects(prev => [newProj, ...prev]);
     setActiveProjectId(newProj.id);
+    logEvent('PROJECT_CREATED', newProj);
 
-    // Also send to backend if backend URL configured
     if (api.defaults.baseURL) {
       try {
         await api.post('/projects', newProj);
@@ -186,17 +244,18 @@ export function AppProvider({ children }) {
 
   const updateProject = (id, updates) => {
     setProjects(prev => prev.map(p => p.id === id ? { ...p, ...updates } : p));
+    logEvent('PROJECT_UPDATED', { id, ...updates });
   };
 
   const deleteProject = (id) => {
     setProjects(prev => prev.filter(p => p.id !== id));
+    logEvent('PROJECT_DELETED', { id });
     if (activeProjectId === id) {
       const remaining = projects.filter(p => p.id !== id);
       setActiveProjectId(remaining[0]?.id || null);
     }
   };
 
-  // Select project and navigate inside it
   const selectProject = (id) => {
     setActiveProjectId(id);
     setCurrentView('site_dashboard');
@@ -214,15 +273,18 @@ export function AppProvider({ children }) {
       assigned_to: taskData.assigned_to || 'Mistri'
     };
     setTasks(prev => [newTask, ...prev]);
+    logEvent('TASK_CREATED', newTask);
     return newTask;
   };
 
   const updateTask = (id, updates) => {
     setTasks(prev => prev.map(t => t.id === id ? { ...t, ...updates } : t));
+    logEvent('TASK_UPDATED', { id, ...updates });
   };
 
   const deleteTask = (id) => {
     setTasks(prev => prev.filter(t => t.id !== id));
+    logEvent('TASK_DELETED', { id });
   };
 
   // Issues Actions
@@ -237,11 +299,13 @@ export function AppProvider({ children }) {
       assigned_to: issueData.assigned_to || 'Site Incharge'
     };
     setIssues(prev => [newIssue, ...prev]);
+    logEvent('ISSUE_CREATED', newIssue);
     return newIssue;
   };
 
   const updateIssue = (id, updates) => {
     setIssues(prev => prev.map(i => i.id === id ? { ...i, ...updates } : i));
+    logEvent('ISSUE_UPDATED', { id, ...updates });
   };
 
   // Materials Actions
@@ -255,6 +319,7 @@ export function AppProvider({ children }) {
       min_threshold: Number(matData.min_threshold) || 10
     };
     setMaterials(prev => [...prev, newMat]);
+    logEvent('MATERIAL_CREATED', newMat);
     return newMat;
   };
 
@@ -265,14 +330,13 @@ export function AppProvider({ children }) {
       project_id: txData.project_id || activeProjectId,
       item_id: txData.item_id,
       item_name: item?.name || 'Material Item',
-      type: txData.type, // 'INWARD' or 'OUTWARD'
+      type: txData.type,
       quantity: Number(txData.quantity),
       date: txData.date || new Date().toISOString().split('T')[0],
       receiver: txData.receiver || 'Site Mistri'
     };
     setMaterialTransactions(prev => [newTx, ...prev]);
 
-    // Update stock quantity
     setMaterials(prev => prev.map(m => {
       if (m.id === txData.item_id) {
         const change = txData.type === 'INWARD' ? Number(txData.quantity) : -Number(txData.quantity);
@@ -280,6 +344,7 @@ export function AppProvider({ children }) {
       }
       return m;
     }));
+    logEvent('MATERIAL_TRANSACTION_RECORDED', newTx);
   };
 
   // Labour & Attendance Actions
@@ -293,6 +358,7 @@ export function AppProvider({ children }) {
       status: 'Active'
     };
     setLabour(prev => [...prev, newWorker]);
+    logEvent('LABOUR_CREATED', newWorker);
     return newWorker;
   };
 
@@ -314,6 +380,7 @@ export function AppProvider({ children }) {
         }];
       }
     });
+    logEvent('ATTENDANCE_RECORDED', { labourId, status, advancePaid, date });
   };
 
   // Payment Actions
@@ -323,16 +390,89 @@ export function AppProvider({ children }) {
       project_id: payData.project_id || activeProjectId,
       milestone: payData.milestone || 'Stage Payment',
       amount: Number(payData.amount) || 0,
-      type: payData.type || 'INCOME', // INCOME or EXPENSE
+      type: payData.type || 'INCOME',
       date: payData.date || new Date().toISOString().split('T')[0],
       status: payData.status || 'Received',
       mode: payData.mode || 'UPI/Bank'
     };
     setPayments(prev => [newPay, ...prev]);
+    logEvent('PAYMENT_CREATED', newPay);
     return newPay;
   };
 
-  // Reset or clear demo data to start fresh (as requested by user)
+  // Dealer Actions
+  const addDealer = (dealerData) => {
+    const newDealer = {
+      id: dealerData.id || 'dlr_' + Date.now(),
+      name: dealerData.name,
+      phone: dealerData.phone || '',
+      city: dealerData.city || 'Pune',
+      rating: Number(dealerData.rating) || 5.0
+    };
+    setDealers(prev => [...prev, newDealer]);
+    logEvent('DEALER_CREATED', newDealer);
+    return newDealer;
+  };
+
+  // Invoice Actions
+  const addInvoice = (invData) => {
+    const newInvoice = {
+      id: invData.id || 'inv_' + Date.now(),
+      invoice_no: invData.invoice_no || `INV-${Date.now()}`,
+      dealer_id: invData.dealer_id || null,
+      po_id: invData.po_id || null,
+      total: Number(invData.total ?? invData.amount ?? 0),
+      status: invData.status || 'CLEAN_MATCH',
+      due_date: invData.due_date || new Date().toISOString().split('T')[0],
+      lines: Array.isArray(invData.lines) ? invData.lines : []
+    };
+    setInvoices(prev => [newInvoice, ...prev]);
+    logEvent('INVOICE_CREATED', newInvoice);
+    return newInvoice;
+  };
+
+  const updateInvoice = (id, updates) => {
+    setInvoices(prev => prev.map(inv => inv.id === id ? { ...inv, ...updates } : inv));
+    logEvent('INVOICE_UPDATED', { id, ...updates });
+  };
+
+  // Purchase Order Actions
+  const addPurchaseOrder = (poData) => {
+    const newPO = {
+      id: poData.id || 'po_' + Date.now(),
+      project_id: poData.project_id || activeProjectId,
+      dealer_id: poData.dealer_id || null,
+      po_number: poData.po_number || `PO-${Date.now()}`,
+      total_amount: Number(poData.total_amount) || 0,
+      status: poData.status || 'Approved'
+    };
+    setPurchaseOrders(prev => [newPO, ...prev]);
+    logEvent('PURCHASE_ORDER_CREATED', newPO);
+    return newPO;
+  };
+
+  // Proposal Actions
+  const addProposal = (propData) => {
+    const newProp = {
+      id: propData.id || 'prop_' + Date.now(),
+      project_id: propData.project_id || activeProjectId,
+      title: propData.title || 'Client Proposal',
+      client_name: propData.client_name || '',
+      amount: Number(propData.amount) || 0,
+      status: propData.status || 'Draft'
+    };
+    setProposals(prev => [newProp, ...prev]);
+    logEvent('PROPOSAL_CREATED', newProp);
+    return newProp;
+  };
+
+  // Cash Settings Actions
+  const updateCashSettings = (updates) => {
+    setCashSettings(prev => ({ ...prev, ...updates }));
+    logEvent('CASH_SETTINGS_UPDATED', updates);
+  };
+
+  // Reset or clear demo data to start fresh
   const resetToCleanWorkspace = () => {
     setProjects([]);
     setActiveProjectId(null);
@@ -343,11 +483,19 @@ export function AppProvider({ children }) {
     setLabour([]);
     setAttendance([]);
     setPayments([]);
-    localStorage.clear();
+    setDealers([]);
+    setInvoices([]);
+    setPurchaseOrders([]);
+    setProposals([]);
+    setCashSettings(INITIAL_CASH_SETTINGS);
+    if (typeof localStorage !== 'undefined') {
+      localStorage.clear();
+    }
   };
 
   return (
     <AppContext.Provider value={{
+      STORAGE_KEYS,
       projects,
       activeProjectId,
       activeProject,
@@ -377,6 +525,19 @@ export function AppProvider({ children }) {
       markAttendance,
       payments,
       addPayment,
+      dealers,
+      addDealer,
+      invoices,
+      addInvoice,
+      updateInvoice,
+      purchaseOrders,
+      addPurchaseOrder,
+      proposals,
+      addProposal,
+      cashSettings,
+      updateCashSettings,
+      eventLedger,
+      logEvent,
       resetToCleanWorkspace
     }}>
       {children}
@@ -384,3 +545,4 @@ export function AppProvider({ children }) {
   );
 }
 
+export default AppContext;
