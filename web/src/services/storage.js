@@ -3,6 +3,8 @@
  * Versioned localStorage persistence service.
  */
 
+import { migrateLocalStorage } from '@buildforce/core';
+
 export const STORAGE_VERSION = 'v1';
 
 export const storageService = {
@@ -29,6 +31,13 @@ export const storageService = {
     if (typeof window === 'undefined') return;
     localStorage.removeItem(`${key}_${STORAGE_VERSION}`);
     localStorage.removeItem(key);
+  },
+
+  migrate(options = {}) {
+    if (typeof window === 'undefined' || typeof localStorage === 'undefined') {
+      return { success: false, skipped: true };
+    }
+    return migrateLocalStorage(localStorage, options);
   }
 };
 
