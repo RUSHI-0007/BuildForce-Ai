@@ -9,6 +9,10 @@
  * - Complete error isolation across subscribers.
  */
 
+import { BUS_CONFIG, DEFAULT_MAX_CHAIN_DEPTH } from '../config.js';
+
+export { BUS_CONFIG, DEFAULT_MAX_CHAIN_DEPTH };
+
 /**
  * Custom error thrown when event publishing exceeds allowable nested chain depth.
  */
@@ -130,12 +134,13 @@ export function createEventLedger(initialEntries = []) {
 /**
  * Creates a hardened event bus with chain depth limits, correlation idempotency, and error isolation.
  * @param {Object} [options]
- * @param {number} [options.maxChainDepth=10] - Max allowable nested event dispatch depth
+ * @param {number} [options.maxChainDepth] - Max allowable nested event dispatch depth (defaults to BUS_CONFIG.MAX_CHAIN_DEPTH)
+ * @param {number} [options.maxDepth] - Alias for maxChainDepth
  * @param {EventLedger} [options.ledger] - Custom append-only ledger instance
  * @returns {EventBus}
  */
 export function createEventBus(options = {}) {
-  const maxChainDepth = options.maxChainDepth ?? 10;
+  const maxChainDepth = options.maxChainDepth ?? options.maxDepth ?? options.config?.maxChainDepth ?? BUS_CONFIG.MAX_CHAIN_DEPTH;
   const ledger = options.ledger || createEventLedger();
 
   /** @type {Map<string, Set<{ handler: Function, oncePerCorrelationId: boolean }>>} */

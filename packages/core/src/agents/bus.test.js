@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { createEventBus, createEventLedger } from './bus.js';
+import { createEventBus, createEventLedger, BUS_CONFIG } from './bus.js';
 
 describe('EventLedger & EventBus (packages/core/src/agents/bus.js)', () => {
   describe('Append-Only Event Ledger', () => {
@@ -58,6 +58,20 @@ describe('EventLedger & EventBus (packages/core/src/agents/bus.js)', () => {
       expect(() => {
         bus.publish('EVENT_A');
       }).toThrow(/Max event chain depth of 3 exceeded/);
+    });
+
+    it('moves max depth to config and respects BUS_CONFIG.MAX_CHAIN_DEPTH by default and via options', () => {
+      expect(BUS_CONFIG).toBeDefined();
+      expect(BUS_CONFIG.MAX_CHAIN_DEPTH).toBe(10);
+
+      // Verify custom config object override
+      const busWithConfig = createEventBus({ config: { maxChainDepth: 2 } });
+      busWithConfig.subscribe('STEP_1', () => busWithConfig.publish('STEP_2'));
+      busWithConfig.subscribe('STEP_2', () => busWithConfig.publish('STEP_3'));
+
+      expect(() => {
+        busWithConfig.publish('STEP_1');
+      }).toThrow(/Max event chain depth of 2 exceeded/);
     });
 
     it('handles once-per-correlation_id idempotent subscriber processing', () => {
