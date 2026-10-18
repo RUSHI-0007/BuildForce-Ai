@@ -22,8 +22,17 @@ export const storageService = {
     if (typeof window === 'undefined') return;
     try {
       localStorage.setItem(`${key}_${STORAGE_VERSION}`, JSON.stringify(value));
-    } catch {
-      // storage full or blocked
+    } catch (e) {
+      if (e && (e.name === 'QuotaExceededError' || e.code === 22)) {
+        console.warn(`[storageService] QuotaExceededError writing key: ${key}`);
+        if (Array.isArray(value)) {
+          try {
+            localStorage.setItem(`${key}_${STORAGE_VERSION}`, JSON.stringify(value.slice(-50)));
+          } catch {
+            // Graceful non-crashing fallback
+          }
+        }
+      }
     }
   },
 

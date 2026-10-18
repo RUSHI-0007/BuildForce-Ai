@@ -84,6 +84,19 @@ export function validateTask(input = {}) {
     errors.push('Task duration_days must be a positive number');
   }
 
+  const weight = Number(input.weight ?? 1);
+  if (isNaN(weight) || weight <= 0) {
+    errors.push('Task weight must be a positive number');
+  }
+
+  const rawProgress = Number(input.progress_pct ?? input.progress ?? 0);
+  if (isNaN(rawProgress) || rawProgress < 0 || rawProgress > 100) {
+    errors.push('Task progress_pct must be a number between 0 and 100');
+  }
+  const progress_pct = (!isNaN(rawProgress) && rawProgress >= 0 && rawProgress <= 100)
+    ? rawProgress
+    : Math.min(100, Math.max(0, isNaN(rawProgress) ? 0 : rawProgress));
+
   const validStatuses = ['Pending', 'In Progress', 'Completed'];
   const status = input.status || 'Pending';
   if (!validStatuses.includes(status)) {
@@ -94,6 +107,10 @@ export function validateTask(input = {}) {
     ? input.depends_on.filter(id => typeof id === 'string' && id.trim())
     : (input.depends_on ? [String(input.depends_on)] : []);
 
+  const material_needs = Array.isArray(input.material_needs)
+    ? input.material_needs.filter(m => m && typeof m === 'object')
+    : [];
+
   return {
     valid: errors.length === 0,
     errors,
@@ -103,10 +120,13 @@ export function validateTask(input = {}) {
       name,
       stage: input.stage ? String(input.stage).trim() : 'General',
       status,
+      start_date: input.start_date || null,
       due_date: input.due_date || null,
       duration_days,
       depends_on,
-      progress_pct: Math.min(100, Math.max(0, Number(input.progress_pct ?? 0))),
+      weight: (isNaN(weight) || weight <= 0) ? 1 : weight,
+      progress_pct,
+      material_needs,
       assigned_to: input.assigned_to ? String(input.assigned_to).trim() : 'Unassigned',
       created_at: input.created_at || new Date().toISOString()
     } : null
@@ -380,3 +400,193 @@ export function validateInvoice(input = {}) {
     } : null
   };
 }
+
+/**
+ * Validates a Delivery record (challan / material delivery).
+ * @param {Object} input
+ * @returns {{ valid: boolean, errors: string[], value: Object }}
+ */
+export function validateDelivery(input = {}) {
+  const errors = [];
+  if (!input || typeof input !== 'object') {
+    return { valid: false, errors: ['Delivery must be a non-null object'], value: null };
+  }
+
+  const challan_no = typeof input.challan_no === 'string' ? input.challan_no.trim() : (input.id || '');
+  if (!challan_no) {
+    errors.push('challan_no is required');
+  }
+
+  const validStatuses = ['Received', 'Inspected', 'Partial', 'Pending'];
+  const status = input.status || 'Received';
+  if (!validStatuses.includes(status)) {
+    errors.push(`Delivery status must be one of: ${validStatuses.join(', ')}`);
+  }
+
+  const items = Array.isArray(input.items)
+    ? input.items.map(item => ({
+        material_id: item.material_id || item.item_id || null,
+        material_name: item.material_name || item.name || '',
+        quantity: Number(item.quantity ?? item.qty ?? 0),
+        unit: item.unit || 'Units',
+        unit_price: Number(item.unit_price ?? item.price ?? 0)
+      }))
+    : [];
+
+  return {
+    valid: errors.length === 0,
+    errors,
+    value: errors.length === 0 ? {
+      id: input.id || `del_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+      project_id: input.project_id || null,
+      po_id: input.po_id || null,
+      dealer_id: input.dealer_id || null,
+      challan_no,
+      delivery_date: input.delivery_date || input.date || new Date().toISOString().split('T')[0],
+      status,
+      items,
+      received_by: input.received_by ? String(input.received_by).trim() : 'Site Incharge',
+      notes: input.notes ? String(input.notes).trim() : '',
+      created_at: input.created_at || new Date().toISOString()
+    } : null
+  };
+}
+
+/**
+ * Validates a Quote record.
+ * @param {Object} input
+ * @returns {{ valid: boolean, errors: string[], value: Object }}
+ */
+export function validateQuote(input = {}) {
+  const errors = [];
+  if (!input || typeof input !== 'object') {
+    return { valid: false, errors: ['Quote must be a non-null object'], value: null };
+  }
+
+  const total_amount = Number(input.total_amount ?? input.amount ?? 0);
+  if (isNaN(total_amount) || total_amount < 0) {
+    errors.push('Quote total_amount must be a non-negative number');
+  }
+
+  const validStatuses = ['Pending', 'Accepted', 'Rejected'];
+  const status = input.status || 'Pending';
+  if (!validStatuses.includes(status)) {
+    errors.push(`Quote status must be one of: ${validStatuses.join(', ')}`);
+  }
+
+  const items = Array.isArray(input.items)
+    ? input.items.map(item => ({
+        item_name: item.item_name || item.name || '',
+        quantity: Number(item.quantity ?? item.qty ?? 0),
+        rate: Number(item.rate ?? item.unit_price ?? 0),
+        amount: Number(item.amount ?? ((item.quantity ?? 0) * (item.rate ?? 0)))
+      }))
+    : [];
+
+  return {
+    valid: errors.length === 0,
+    errors,
+    value: errors.length === 0 ? {
+      id: input.id || `qte_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+      rfq_id: input.rfq_id || null,
+      dealer_id: input.dealer_id || null,
+      dealer_name: input.dealer_name ? String(input.dealer_name).trim() : '',
+      project_id: input.project_id || null,
+      total_amount,
+      status,
+      items,
+      valid_until: input.valid_until || null,
+      created_at: input.created_at || new Date().toISOString()
+    } : null
+  };
+}
+
+/**
+ * Validates a Request For Quotation (RFQ) record.
+ * @param {Object} input
+ * @returns {{ valid: boolean, errors: string[], value: Object }}
+ */
+export function validateRFQ(input = {}) {
+  const errors = [];
+  if (!input || typeof input !== 'object') {
+    return { valid: false, errors: ['RFQ must be a non-null object'], value: null };
+  }
+
+  const title = typeof input.title === 'string' ? input.title.trim() : (input.rfq_number || '');
+  if (!title) {
+    errors.push('RFQ title or rfq_number is required');
+  }
+
+  const validStatuses = ['Open', 'Closed', 'Cancelled'];
+  const status = input.status || 'Open';
+  if (!validStatuses.includes(status)) {
+    errors.push(`RFQ status must be one of: ${validStatuses.join(', ')}`);
+  }
+
+  const items = Array.isArray(input.items)
+    ? input.items.map(item => ({
+        material_id: item.material_id || null,
+        name: item.name || item.material_name || '',
+        quantity: Number(item.quantity ?? item.qty ?? 0),
+        unit: item.unit || 'Units'
+      }))
+    : [];
+
+  return {
+    valid: errors.length === 0,
+    errors,
+    value: errors.length === 0 ? {
+      id: input.id || `rfq_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+      project_id: input.project_id || null,
+      rfq_number: input.rfq_number || `RFQ-${Date.now()}`,
+      title,
+      status,
+      items,
+      due_date: input.due_date || null,
+      created_at: input.created_at || new Date().toISOString()
+    } : null
+  };
+}
+
+/**
+ * Validates a PlanVersion record (scheduler plan baseline/version).
+ * @param {Object} input
+ * @returns {{ valid: boolean, errors: string[], value: Object }}
+ */
+export function validatePlanVersion(input = {}) {
+  const errors = [];
+  if (!input || typeof input !== 'object') {
+    return { valid: false, errors: ['PlanVersion must be a non-null object'], value: null };
+  }
+
+  if (!input.project_id) {
+    errors.push('PlanVersion project_id is required');
+  }
+
+  const version = Number(input.version ?? 1);
+  if (isNaN(version) || version <= 0) {
+    errors.push('PlanVersion version must be a positive integer');
+  }
+
+  const total_duration_days = Number(input.total_duration_days ?? 0);
+  if (isNaN(total_duration_days) || total_duration_days < 0) {
+    errors.push('PlanVersion total_duration_days must be a non-negative number');
+  }
+
+  return {
+    valid: errors.length === 0,
+    errors,
+    value: errors.length === 0 ? {
+      id: input.id || `pln_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+      project_id: input.project_id,
+      version,
+      name: input.name ? String(input.name).trim() : `Plan v${version}`,
+      tasks: Array.isArray(input.tasks) ? input.tasks : [],
+      critical_path: Array.isArray(input.critical_path) ? input.critical_path : [],
+      total_duration_days,
+      created_by: input.created_by ? String(input.created_by).trim() : 'scheduler_agent',
+      created_at: input.created_at || new Date().toISOString()
+    } : null
+  };
+}
+

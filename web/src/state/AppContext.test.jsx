@@ -112,4 +112,105 @@ describe('AppContext - Migration, New Entities & Event Ledger Persistence', () =
     expect(Array.isArray(savedLog)).toBe(true);
     expect(savedLog.some(e => e.type === 'DEALER_CREATED')).toBe(true);
   });
+
+  it('initializes, adds, and persists Phase 3 entities (deliveries, quotes, rfqs, plan_versions)', () => {
+    const contextValue = renderWithContext();
+
+    expect(Array.isArray(contextValue.deliveries)).toBe(true);
+    expect(Array.isArray(contextValue.quotes)).toBe(true);
+    expect(Array.isArray(contextValue.rfqs)).toBe(true);
+    expect(Array.isArray(contextValue.planVersions)).toBe(true);
+
+    const delivery = contextValue.addDelivery({
+      challan_no: 'CH-4091',
+      items: [{ material_id: 'mat_1', quantity: 150 }]
+    });
+    expect(delivery.challan_no).toBe('CH-4091');
+
+    const quote = contextValue.addQuote({
+      dealer_name: 'Apex Steel',
+      total_amount: 154000
+    });
+    expect(quote.dealer_name).toBe('Apex Steel');
+    expect(quote.total_amount).toBe(154000);
+
+    const rfq = contextValue.addRFQ({
+      title: 'Cement 500 Bags RFQ',
+      rfq_number: 'RFQ-C-01'
+    });
+    expect(rfq.title).toBe('Cement 500 Bags RFQ');
+
+    const plan = contextValue.addPlanVersion({
+      version: 1,
+      total_duration_days: 40
+    });
+    expect(plan.version).toBe(1);
+    expect(plan.total_duration_days).toBe(40);
+
+    const ledger = contextValue.eventLedger.read();
+    expect(ledger.some(e => e.type === 'DELIVERY_RECORDED')).toBe(true);
+    expect(ledger.some(e => e.type === 'QUOTE_RECEIVED')).toBe(true);
+    expect(ledger.some(e => e.type === 'RFQ_CREATED')).toBe(true);
+    expect(ledger.some(e => e.type === 'PLAN_VERSION_COMMITTED')).toBe(true);
+  });
+
+  it('creates tasks with complete Phase 3 fields (start_date, duration_days, depends_on, weight, progress_pct, material_needs)', () => {
+    const contextValue = renderWithContext();
+
+    const task = contextValue.addTask({
+      name: 'Foundation Concrete Pouring',
+      start_date: '2026-10-25',
+      duration_days: 3,
+      depends_on: ['tsk_0'],
+      weight: 3.5,
+      progress_pct: 25,
+      material_needs: [{ material_id: 'mat_1', quantity: 100, unit: 'Bags' }]
+    });
+
+    expect(task.name).toBe('Foundation Concrete Pouring');
+    expect(task.start_date).toBe('2026-10-25');
+    expect(task.duration_days).toBe(3);
+    expect(task.depends_on).toEqual(['tsk_0']);
+    expect(task.weight).toBe(3.5);
+    expect(task.progress_pct).toBe(25);
+    expect(task.material_needs).toHaveLength(1);
+    expect(task.material_needs[0].material_id).toBe('mat_1');
+  });
+
+  it('enforces size guard for event ledger in localStorage (capping at 500 and handling QuotaExceededError)', () => {
+    const contextValue = renderWithContext();
+
+    // Append 550 events
+    for (let i = 1; i <= 550; i++) {
+      contextValue.logEvent('BULK_TEST_EVENT', { sequence: i });
+    }
+
+    // In-memory ledger holds all 550 events
+    expect(contextValue.eventLedger.read().length).toBeGreaterThanOrEqual(550);
+
+    // But localStorage persistence must be capped at 500 entries (sliding window)
+    const storedEvents = JSON.parse(mockStorage.getItem(`${STORAGE_KEYS.EVENT_LOG}_v1`));
+    expect(storedEvents.length).toBeLessThanOrEqual(500);
+    // Sliding window keeps the latest events
+    expect(storedEvents[storedEvents.length - 1].payload.sequence).toBe(550);
+
+    // Test QuotaExceededError handling in storage
+    const originalSetItem = mockStorage.setItem;
+    let quotaErrorFired = false;
+    mockStorage.setItem = (k, v) => {
+      if (k.includes('buildsite_event_log') && !quotaErrorFired) {
+        quotaErrorFired = true;
+        const err = new Error('QuotaExceeded');
+        err.name = 'QuotaExceededError';
+        err.code = 22;
+        throw err;
+      }
+      return originalSetItem.call(mockStorage, k, v);
+    };
+
+    // Logging another event should trigger size guard / emergency prune and not throw
+    expect(() => {
+      contextValue.logEvent('QUOTA_TEST_EVENT', { test: true });
+    }).not.toThrow();
+  });
 });

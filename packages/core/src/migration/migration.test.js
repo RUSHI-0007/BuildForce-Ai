@@ -15,6 +15,10 @@ import {
   migrateLabour,
   migrateAttendance,
   migratePayments,
+  migrateDeliveries,
+  migrateQuotes,
+  migrateRFQs,
+  migratePlanVersions,
   LEGACY_STORAGE_KEYS,
   MIGRATION_FLAG_KEY,
   SCHEMA_VERSION
@@ -306,6 +310,96 @@ describe('Storage Migration Engine (packages/core/src/migration)', () => {
         expect(testStorage.getItem(MIGRATION_FLAG_KEY)).toBe('true');
         expect(testStorage.getItem(`${LEGACY_STORAGE_KEYS.PROJECTS}_v1`)).toBeDefined();
       }
+    });
+  });
+
+  describe('Phase 3 Migration (Deliveries, Quotes, RFQs, Plan Versions & Task Fields)', () => {
+    it('migrates tasks populating all new task fields (start_date, duration_days, depends_on, weight, progress_pct, material_needs)', () => {
+      const legacyTasks = [
+        {
+          id: 'tsk_10',
+          name: 'RCC Columns Casting',
+          duration: 3,
+          progress: 50,
+          depends_on: ['tsk_9'],
+          start_date: '2026-10-22',
+          weight: 2,
+          material_needs: [{ material_id: 'mat_2', quantity: 2, unit: 'Tons' }]
+        }
+      ];
+      const { data, errors } = migrateTasks(legacyTasks);
+      expect(errors).toHaveLength(0);
+      expect(data).toHaveLength(1);
+      expect(data[0].duration_days).toBe(3);
+      expect(data[0].progress_pct).toBe(50);
+      expect(data[0].depends_on).toEqual(['tsk_9']);
+      expect(data[0].start_date).toBe('2026-10-22');
+      expect(data[0].weight).toBe(2);
+      expect(data[0].material_needs).toHaveLength(1);
+      expect(data[0].material_needs[0].material_id).toBe('mat_2');
+    });
+
+    it('migrates deliveries, quotes, RFQs, and plan_versions correctly', () => {
+      const rawDeliveries = [{ challan_no: 'CH-991', project_id: 'site_101', items: [{ material_id: 'mat_1', quantity: 50 }] }];
+      const rawQuotes = [{ dealer_name: 'Shinde Traders', total_amount: 35000, items: [] }];
+      const rawRFQs = [{ title: 'Cement RFQ', rfq_number: 'RFQ-01', items: [] }];
+      const rawPlanVersions = [{ project_id: 'site_101', version: 1, total_duration_days: 45 }];
+
+      const delRes = migrateDeliveries(rawDeliveries);
+      expect(delRes.errors).toHaveLength(0);
+      expect(delRes.data[0].challan_no).toBe('CH-991');
+
+      const qteRes = migrateQuotes(rawQuotes);
+      expect(qteRes.errors).toHaveLength(0);
+      expect(qteRes.data[0].total_amount).toBe(35000);
+
+      const rfqRes = migrateRFQs(rawRFQs);
+      expect(rfqRes.errors).toHaveLength(0);
+      expect(rfqRes.data[0].rfq_number).toBe('RFQ-01');
+
+      const plnRes = migratePlanVersions(rawPlanVersions);
+      expect(plnRes.errors).toHaveLength(0);
+      expect(plnRes.data[0].version).toBe(1);
+    });
+
+    it('includes Phase 3 entities in migrateLegacyState and migrateLocalStorage', () => {
+      const legacyMap = {
+        [LEGACY_STORAGE_KEYS.PROJECTS]: JSON.stringify([{ id: 'p1', name: 'Site One', budget: 1000000 }]),
+        [LEGACY_STORAGE_KEYS.DELIVERIES]: JSON.stringify([{ challan_no: 'CH-55', project_id: 'p1' }]),
+        [LEGACY_STORAGE_KEYS.QUOTES]: JSON.stringify([{ total_amount: 12000, dealer_name: 'Vendor A' }]),
+        [LEGACY_STORAGE_KEYS.RFQS]: JSON.stringify([{ title: 'Steel RFQ', rfq_number: 'RFQ-10' }]),
+        [LEGACY_STORAGE_KEYS.PLAN_VERSIONS]: JSON.stringify([{ project_id: 'p1', version: 2 }])
+      };
+
+      const { state, report } = migrateLegacyState(legacyMap);
+      expect(report.success).toBe(true);
+      expect(state.deliveries).toHaveLength(1);
+      expect(state.quotes).toHaveLength(1);
+      expect(state.rfqs).toHaveLength(1);
+      expect(state.plan_versions).toHaveLength(1);
+      expect(report.counts.deliveries).toBe(1);
+      expect(report.counts.quotes).toBe(1);
+      expect(report.counts.rfqs).toBe(1);
+      expect(report.counts.plan_versions).toBe(1);
+
+      // Verify migrateLocalStorage writes versioned keys
+      const store = new Map();
+      const testStorage = {
+        getItem: (k) => store.has(k) ? store.get(k) : null,
+        setItem: (k, v) => store.set(k, String(v)),
+        removeItem: (k) => store.delete(k),
+        clear: () => store.clear()
+      };
+      for (const [k, v] of Object.entries(legacyMap)) {
+        testStorage.setItem(k, v);
+      }
+
+      const localRes = migrateLocalStorage(testStorage);
+      expect(localRes.success).toBe(true);
+      expect(testStorage.getItem(`${LEGACY_STORAGE_KEYS.DELIVERIES}_v1`)).toBeDefined();
+      expect(testStorage.getItem(`${LEGACY_STORAGE_KEYS.QUOTES}_v1`)).toBeDefined();
+      expect(testStorage.getItem(`${LEGACY_STORAGE_KEYS.RFQS}_v1`)).toBeDefined();
+      expect(testStorage.getItem(`${LEGACY_STORAGE_KEYS.PLAN_VERSIONS}_v1`)).toBeDefined();
     });
   });
 });

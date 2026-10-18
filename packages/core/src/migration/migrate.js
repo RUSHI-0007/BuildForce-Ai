@@ -12,7 +12,11 @@ import {
   validateMaterialTransaction,
   validateLabour,
   validateAttendance,
-  validatePayment
+  validatePayment,
+  validateDelivery,
+  validateQuote,
+  validateRFQ,
+  validatePlanVersion
 } from '../schema/schemas.js';
 
 export const MIGRATION_FLAG_KEY = 'buildforce_migrated_v1';
@@ -28,7 +32,11 @@ export const LEGACY_STORAGE_KEYS = {
   LABOUR: 'buildsite_labour',
   ATTENDANCE: 'buildsite_attendance',
   PAYMENTS: 'buildsite_payments',
-  USER: 'buildsite_user'
+  USER: 'buildsite_user',
+  DELIVERIES: 'buildsite_deliveries',
+  QUOTES: 'buildsite_quotes',
+  RFQS: 'buildsite_rfqs',
+  PLAN_VERSIONS: 'buildsite_plan_versions'
 };
 
 /**
@@ -105,11 +113,18 @@ export function migrateTasks(raw) {
   for (const item of list) {
     if (!item || typeof item !== 'object') continue;
     const durationDays = Number(item.duration_days ?? item.duration ?? 1);
+    const rawWeight = Number(item.weight ?? 1);
+    const weight = (!isNaN(rawWeight) && rawWeight > 0) ? rawWeight : 1;
+    const rawProgress = Number(item.progress_pct ?? item.progress ?? 0);
+    const progress_pct = !isNaN(rawProgress) ? Math.min(100, Math.max(0, rawProgress)) : 0;
     const transformed = {
       ...item,
+      start_date: item.start_date || null,
       duration_days: durationDays > 0 ? durationDays : 1,
-      progress_pct: Number(item.progress_pct ?? item.progress ?? 0),
-      depends_on: Array.isArray(item.depends_on) ? item.depends_on : []
+      depends_on: Array.isArray(item.depends_on) ? item.depends_on : (item.depends_on ? [String(item.depends_on)] : []),
+      weight,
+      progress_pct,
+      material_needs: Array.isArray(item.material_needs) ? item.material_needs : []
     };
     const validation = validateTask(transformed);
     if (validation.valid) {
@@ -299,6 +314,102 @@ export function migratePayments(raw) {
 }
 
 /**
+ * Migrates delivery records to canonical v1 format.
+ * @param {Array<Object>|string} raw
+ * @returns {{ data: Object[], errors: Array<{ item: any, errors: string[] }> }}
+ */
+export function migrateDeliveries(raw) {
+  const parsed = safeParseJson(raw, []);
+  const list = Array.isArray(parsed) ? parsed : [];
+  const data = [];
+  const errors = [];
+
+  for (const item of list) {
+    if (!item || typeof item !== 'object') continue;
+    const validation = validateDelivery(item);
+    if (validation.valid) {
+      data.push(validation.value);
+    } else {
+      errors.push({ item, errors: validation.errors });
+    }
+  }
+
+  return { data, errors };
+}
+
+/**
+ * Migrates quote records to canonical v1 format.
+ * @param {Array<Object>|string} raw
+ * @returns {{ data: Object[], errors: Array<{ item: any, errors: string[] }> }}
+ */
+export function migrateQuotes(raw) {
+  const parsed = safeParseJson(raw, []);
+  const list = Array.isArray(parsed) ? parsed : [];
+  const data = [];
+  const errors = [];
+
+  for (const item of list) {
+    if (!item || typeof item !== 'object') continue;
+    const validation = validateQuote(item);
+    if (validation.valid) {
+      data.push(validation.value);
+    } else {
+      errors.push({ item, errors: validation.errors });
+    }
+  }
+
+  return { data, errors };
+}
+
+/**
+ * Migrates RFQ records to canonical v1 format.
+ * @param {Array<Object>|string} raw
+ * @returns {{ data: Object[], errors: Array<{ item: any, errors: string[] }> }}
+ */
+export function migrateRFQs(raw) {
+  const parsed = safeParseJson(raw, []);
+  const list = Array.isArray(parsed) ? parsed : [];
+  const data = [];
+  const errors = [];
+
+  for (const item of list) {
+    if (!item || typeof item !== 'object') continue;
+    const validation = validateRFQ(item);
+    if (validation.valid) {
+      data.push(validation.value);
+    } else {
+      errors.push({ item, errors: validation.errors });
+    }
+  }
+
+  return { data, errors };
+}
+
+/**
+ * Migrates plan version records to canonical v1 format.
+ * @param {Array<Object>|string} raw
+ * @returns {{ data: Object[], errors: Array<{ item: any, errors: string[] }> }}
+ */
+export function migratePlanVersions(raw) {
+  const parsed = safeParseJson(raw, []);
+  const list = Array.isArray(parsed) ? parsed : [];
+  const data = [];
+  const errors = [];
+
+  for (const item of list) {
+    if (!item || typeof item !== 'object') continue;
+    const validation = validatePlanVersion(item);
+    if (validation.valid) {
+      data.push(validation.value);
+    } else {
+      errors.push({ item, errors: validation.errors });
+    }
+  }
+
+  return { data, errors };
+}
+
+/**
  * Migrates a complete legacy state dictionary to canonical v1 state.
  * @param {Record<string, any>} legacyMap
  * @returns {{
@@ -333,6 +444,18 @@ export function migrateLegacyState(legacyMap = {}) {
   const paymentsRes = migratePayments(legacyMap[LEGACY_STORAGE_KEYS.PAYMENTS]);
   if (paymentsRes.errors.length) allErrors.push(...paymentsRes.errors);
 
+  const deliveriesRes = migrateDeliveries(legacyMap[LEGACY_STORAGE_KEYS.DELIVERIES]);
+  if (deliveriesRes.errors.length) allErrors.push(...deliveriesRes.errors);
+
+  const quotesRes = migrateQuotes(legacyMap[LEGACY_STORAGE_KEYS.QUOTES]);
+  if (quotesRes.errors.length) allErrors.push(...quotesRes.errors);
+
+  const rfqsRes = migrateRFQs(legacyMap[LEGACY_STORAGE_KEYS.RFQS]);
+  if (rfqsRes.errors.length) allErrors.push(...rfqsRes.errors);
+
+  const planVersionsRes = migratePlanVersions(legacyMap[LEGACY_STORAGE_KEYS.PLAN_VERSIONS]);
+  if (planVersionsRes.errors.length) allErrors.push(...planVersionsRes.errors);
+
   const issues = safeParseJson(legacyMap[LEGACY_STORAGE_KEYS.ISSUES], []);
   const activeProjectId = legacyMap[LEGACY_STORAGE_KEYS.ACTIVE_PROJECT_ID] || (projectsRes.data[0]?.id ?? null);
   const user = safeParseJson(legacyMap[LEGACY_STORAGE_KEYS.USER], null);
@@ -348,6 +471,10 @@ export function migrateLegacyState(legacyMap = {}) {
     labour: labourRes.data,
     attendance: attendanceRes.data,
     payments: paymentsRes.data,
+    deliveries: deliveriesRes.data,
+    quotes: quotesRes.data,
+    rfqs: rfqsRes.data,
+    plan_versions: planVersionsRes.data,
     user
   };
 
@@ -359,6 +486,10 @@ export function migrateLegacyState(legacyMap = {}) {
     labour: labourRes.data.length,
     attendance: attendanceRes.data.length,
     payments: paymentsRes.data.length,
+    deliveries: deliveriesRes.data.length,
+    quotes: quotesRes.data.length,
+    rfqs: rfqsRes.data.length,
+    plan_versions: planVersionsRes.data.length,
     issues: state.issues.length
   };
 
@@ -430,6 +561,18 @@ export function migrateLocalStorage(storage, options = {}) {
 
     storage.setItem(LEGACY_STORAGE_KEYS.PAYMENTS, JSON.stringify(state.payments));
     storage.setItem(`${LEGACY_STORAGE_KEYS.PAYMENTS}_v1`, JSON.stringify(state.payments));
+
+    storage.setItem(LEGACY_STORAGE_KEYS.DELIVERIES, JSON.stringify(state.deliveries));
+    storage.setItem(`${LEGACY_STORAGE_KEYS.DELIVERIES}_v1`, JSON.stringify(state.deliveries));
+
+    storage.setItem(LEGACY_STORAGE_KEYS.QUOTES, JSON.stringify(state.quotes));
+    storage.setItem(`${LEGACY_STORAGE_KEYS.QUOTES}_v1`, JSON.stringify(state.quotes));
+
+    storage.setItem(LEGACY_STORAGE_KEYS.RFQS, JSON.stringify(state.rfqs));
+    storage.setItem(`${LEGACY_STORAGE_KEYS.RFQS}_v1`, JSON.stringify(state.rfqs));
+
+    storage.setItem(LEGACY_STORAGE_KEYS.PLAN_VERSIONS, JSON.stringify(state.plan_versions));
+    storage.setItem(`${LEGACY_STORAGE_KEYS.PLAN_VERSIONS}_v1`, JSON.stringify(state.plan_versions));
 
     if (state.activeProjectId) {
       storage.setItem(LEGACY_STORAGE_KEYS.ACTIVE_PROJECT_ID, state.activeProjectId);

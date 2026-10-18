@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { createEventLedger } from '@buildforce/core';
 import api from '../services/httpClient';
 import storageService from '../services/storage';
-import { AppContext, STORAGE_KEYS } from './appContextInstance';
+import { AppContext, STORAGE_KEYS, MAX_LEDGER_STORAGE_ENTRIES } from './appContextInstance';
 
 // Clean, realistic minimal starter project for small contractor
 const INITIAL_PROJECT = {
@@ -153,6 +153,23 @@ export function AppProvider({ children }) {
     return storageService.get(STORAGE_KEYS.CASH_SETTINGS, INITIAL_CASH_SETTINGS);
   });
 
+  // Phase 3 entities
+  const [deliveries, setDeliveries] = useState(() => {
+    return storageService.get(STORAGE_KEYS.DELIVERIES, []);
+  });
+
+  const [quotes, setQuotes] = useState(() => {
+    return storageService.get(STORAGE_KEYS.QUOTES, []);
+  });
+
+  const [rfqs, setRfqs] = useState(() => {
+    return storageService.get(STORAGE_KEYS.RFQS, []);
+  });
+
+  const [planVersions, setPlanVersions] = useState(() => {
+    return storageService.get(STORAGE_KEYS.PLAN_VERSIONS, []);
+  });
+
   // Append-only Event Ledger instance
   const [eventLedger] = useState(() => {
     const savedLog = storageService.get(STORAGE_KEYS.EVENT_LOG, []);
@@ -178,6 +195,28 @@ export function AppProvider({ children }) {
   useEffect(() => { storageService.set(STORAGE_KEYS.PURCHASE_ORDERS, purchaseOrders); }, [purchaseOrders]);
   useEffect(() => { storageService.set(STORAGE_KEYS.PROPOSALS, proposals); }, [proposals]);
   useEffect(() => { storageService.set(STORAGE_KEYS.CASH_SETTINGS, cashSettings); }, [cashSettings]);
+  useEffect(() => { storageService.set(STORAGE_KEYS.DELIVERIES, deliveries); }, [deliveries]);
+  useEffect(() => { storageService.set(STORAGE_KEYS.QUOTES, quotes); }, [quotes]);
+  useEffect(() => { storageService.set(STORAGE_KEYS.RFQS, rfqs); }, [rfqs]);
+  useEffect(() => { storageService.set(STORAGE_KEYS.PLAN_VERSIONS, planVersions); }, [planVersions]);
+
+  // Size guard helper for persisting the event ledger to localStorage
+  const persistLedger = (events) => {
+    try {
+      const boundedEvents = Array.isArray(events)
+        ? events.slice(-MAX_LEDGER_STORAGE_ENTRIES)
+        : [];
+      storageService.set(STORAGE_KEYS.EVENT_LOG, boundedEvents);
+    } catch (err) {
+      console.warn('[EventLedger] Size guard triggered, pruning older events:', err);
+      try {
+        const emergencyEvents = Array.isArray(events) ? events.slice(-50) : [];
+        storageService.set(STORAGE_KEYS.EVENT_LOG, emergencyEvents);
+      } catch {
+        // Unrecoverable storage error
+      }
+    }
+  };
 
   // Log event helper for state mutations
   const logEvent = (type, payload = {}) => {
@@ -187,7 +226,7 @@ export function AppProvider({ children }) {
         payload,
         project_id: activeProjectId
       });
-      storageService.set(STORAGE_KEYS.EVENT_LOG, eventLedger.read());
+      persistLedger(eventLedger.read());
       return evt;
     } catch {
       return null;
@@ -264,12 +303,18 @@ export function AppProvider({ children }) {
   // Tasks Actions
   const addTask = (taskData) => {
     const newTask = {
-      id: 'tsk_' + Date.now(),
+      id: taskData.id || 'tsk_' + Date.now(),
       project_id: taskData.project_id || activeProjectId,
       name: taskData.name,
       stage: taskData.stage || 'General',
       status: taskData.status || 'Pending',
+      start_date: taskData.start_date || new Date().toISOString().split('T')[0],
       due_date: taskData.due_date || new Date().toISOString().split('T')[0],
+      duration_days: Number(taskData.duration_days ?? taskData.duration ?? 1),
+      depends_on: Array.isArray(taskData.depends_on) ? taskData.depends_on : (taskData.depends_on ? [String(taskData.depends_on)] : []),
+      weight: Number(taskData.weight ?? 1),
+      progress_pct: Number(taskData.progress_pct ?? taskData.progress ?? 0),
+      material_needs: Array.isArray(taskData.material_needs) ? taskData.material_needs : [],
       assigned_to: taskData.assigned_to || 'Mistri'
     };
     setTasks(prev => [newTask, ...prev]);
@@ -472,6 +517,77 @@ export function AppProvider({ children }) {
     logEvent('CASH_SETTINGS_UPDATED', updates);
   };
 
+  // Delivery Actions
+  const addDelivery = (deliveryData) => {
+    const newDelivery = {
+      id: deliveryData.id || 'del_' + Date.now(),
+      project_id: deliveryData.project_id || activeProjectId,
+      po_id: deliveryData.po_id || null,
+      dealer_id: deliveryData.dealer_id || null,
+      challan_no: deliveryData.challan_no || `CH-${Date.now()}`,
+      delivery_date: deliveryData.delivery_date || deliveryData.date || new Date().toISOString().split('T')[0],
+      status: deliveryData.status || 'Received',
+      items: Array.isArray(deliveryData.items) ? deliveryData.items : [],
+      received_by: deliveryData.received_by || 'Site Incharge',
+      notes: deliveryData.notes || ''
+    };
+    setDeliveries(prev => [newDelivery, ...prev]);
+    logEvent('DELIVERY_RECORDED', newDelivery);
+    return newDelivery;
+  };
+
+  // Quote Actions
+  const addQuote = (quoteData) => {
+    const newQuote = {
+      id: quoteData.id || 'qte_' + Date.now(),
+      rfq_id: quoteData.rfq_id || null,
+      dealer_id: quoteData.dealer_id || null,
+      dealer_name: quoteData.dealer_name || '',
+      project_id: quoteData.project_id || activeProjectId,
+      total_amount: Number(quoteData.total_amount ?? quoteData.amount ?? 0),
+      status: quoteData.status || 'Pending',
+      items: Array.isArray(quoteData.items) ? quoteData.items : [],
+      valid_until: quoteData.valid_until || null
+    };
+    setQuotes(prev => [newQuote, ...prev]);
+    logEvent('QUOTE_RECEIVED', newQuote);
+    return newQuote;
+  };
+
+  // RFQ Actions
+  const addRFQ = (rfqData) => {
+    const newRFQ = {
+      id: rfqData.id || 'rfq_' + Date.now(),
+      project_id: rfqData.project_id || activeProjectId,
+      rfq_number: rfqData.rfq_number || `RFQ-${Date.now()}`,
+      title: rfqData.title || 'Material Request',
+      status: rfqData.status || 'Open',
+      items: Array.isArray(rfqData.items) ? rfqData.items : [],
+      due_date: rfqData.due_date || null
+    };
+    setRfqs(prev => [newRFQ, ...prev]);
+    logEvent('RFQ_CREATED', newRFQ);
+    return newRFQ;
+  };
+
+  // Plan Version Actions
+  const addPlanVersion = (planData) => {
+    const newPlanVersion = {
+      id: planData.id || 'pln_' + Date.now(),
+      project_id: planData.project_id || activeProjectId,
+      version: Number(planData.version ?? (planVersions.length + 1)),
+      name: planData.name || `Plan v${planData.version ?? (planVersions.length + 1)}`,
+      tasks: Array.isArray(planData.tasks) ? planData.tasks : [],
+      critical_path: Array.isArray(planData.critical_path) ? planData.critical_path : [],
+      total_duration_days: Number(planData.total_duration_days ?? 0),
+      created_by: planData.created_by || 'scheduler_agent',
+      created_at: new Date().toISOString()
+    };
+    setPlanVersions(prev => [newPlanVersion, ...prev]);
+    logEvent('PLAN_VERSION_COMMITTED', newPlanVersion);
+    return newPlanVersion;
+  };
+
   // Reset or clear demo data to start fresh
   const resetToCleanWorkspace = () => {
     setProjects([]);
@@ -487,6 +603,10 @@ export function AppProvider({ children }) {
     setInvoices([]);
     setPurchaseOrders([]);
     setProposals([]);
+    setDeliveries([]);
+    setQuotes([]);
+    setRfqs([]);
+    setPlanVersions([]);
     setCashSettings(INITIAL_CASH_SETTINGS);
     if (typeof localStorage !== 'undefined') {
       localStorage.clear();
@@ -496,6 +616,7 @@ export function AppProvider({ children }) {
   return (
     <AppContext.Provider value={{
       STORAGE_KEYS,
+      MAX_LEDGER_STORAGE_ENTRIES,
       projects,
       activeProjectId,
       activeProject,
@@ -534,6 +655,15 @@ export function AppProvider({ children }) {
       addPurchaseOrder,
       proposals,
       addProposal,
+      deliveries,
+      addDelivery,
+      quotes,
+      addQuote,
+      rfqs,
+      addRFQ,
+      planVersions,
+      plan_versions: planVersions,
+      addPlanVersion,
       cashSettings,
       updateCashSettings,
       eventLedger,

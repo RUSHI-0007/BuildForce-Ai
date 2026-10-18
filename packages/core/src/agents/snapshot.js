@@ -99,6 +99,12 @@ export function buildProjectSnapshot(state = {}, activeProjectId = null) {
       .map(po => ({ ...po })),
     deliveries: (Array.isArray(safeState.deliveries) ? safeState.deliveries : [])
       .map(d => ({ ...d })),
+    quotes: (Array.isArray(safeState.quotes) ? safeState.quotes : [])
+      .map(q => ({ ...q })),
+    rfqs: (Array.isArray(safeState.rfqs) ? safeState.rfqs : [])
+      .map(r => ({ ...r })),
+    plan_versions: (Array.isArray(safeState.plan_versions ?? safeState.planVersions) ? (safeState.plan_versions ?? safeState.planVersions) : [])
+      .map(pv => ({ ...pv })),
     proposals: (Array.isArray(safeState.proposals) ? safeState.proposals : [])
       .filter(prop => !prop.project_id || prop.project_id === currentProjectId)
       .map(prop => ({ ...prop })),

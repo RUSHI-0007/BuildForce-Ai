@@ -15,8 +15,14 @@ export const STORAGE_KEYS = {
   PURCHASE_ORDERS: 'buildsite_purchase_orders',
   PROPOSALS: 'buildsite_proposals',
   CASH_SETTINGS: 'buildsite_cash_settings',
-  EVENT_LOG: 'buildsite_event_log'
+  EVENT_LOG: 'buildsite_event_log',
+  DELIVERIES: 'buildsite_deliveries',
+  QUOTES: 'buildsite_quotes',
+  RFQS: 'buildsite_rfqs',
+  PLAN_VERSIONS: 'buildsite_plan_versions'
 };
+
+export const MAX_LEDGER_STORAGE_ENTRIES = 500;
 
 export const AppContext = createContext(null);
 export default AppContext;
