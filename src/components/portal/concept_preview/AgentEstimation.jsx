@@ -3,7 +3,7 @@ import {
   FileSpreadsheet, Sparkles, CheckCircle2, Download, Eye, 
   Layers, RefreshCw, ZoomIn, ZoomOut, Check, Sliders 
 } from 'lucide-react';
-import { TAKEOFF_DATA } from '../../data/mockData';
+import { TAKEOFF_DATA } from './conceptSampleData';
 import confetti from 'canvas-confetti';
 
 export function AgentEstimation({ activeProject }) {

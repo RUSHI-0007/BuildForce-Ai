@@ -81,7 +81,7 @@ export function App() {
               onLoginSuccess={() => setCurrentView('portal')}
             />
           ) : (
-            /* Full Working Powerplay-Architecture Portal */
+            /* Full Working Contractor Portal */
             <BuildSitePortal 
               onBackToLanding={() => setCurrentView('landing')}
               initialAgent={initialAgentForPortal}

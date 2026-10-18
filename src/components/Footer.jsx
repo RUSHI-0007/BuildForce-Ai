@@ -12,71 +12,62 @@ export function Footer({ onOpenDemoModal, onLaunchPortal }) {
               <path d="M17 13L29 20L17 27V13Z" fill="#60A5FA" />
               <circle cx="28.5" cy="20" r="3.5" fill="#EB4D4B" />
             </svg>
-            <span style={{ color: '#fff', fontWeight: 800 }}>BuildForce</span>
+            <span style={{ color: '#fff', fontWeight: 800 }}>BuildForce AI</span>
           </div>
           <p style={{ fontSize: 13.5, color: '#94a3b8', lineHeight: 1.6, maxWidth: 320, marginBottom: 16 }}>
-            BuildForce is India's leading autonomous construction intelligence & AI workforce platform. Trusted by 40,000+ builders, contractors, and developers across India.
+            Operational software and intelligent assistance designed specifically for independent civil contractors, small residential builders, and trade specialists running 1 to 10 sites.
           </p>
           <div style={{ fontSize: 12, color: '#64748b' }}>
-            Headquarters: Sector 2, HSR Layout, Bengaluru, Karnataka 560102
+            Built for small contractors across India.
           </div>
         </div>
 
         <div>
-          <div className="footer-col-title">5 AI Agents</div>
+          <div className="footer-col-title">AI Agents</div>
           <ul className="footer-links">
-            <li><a href="#estimation" onClick={onLaunchPortal}>Estimation & Takeoff AI</a></li>
-            <li><a href="#project-manager" onClick={onLaunchPortal}>Project Manager & Quality AI</a></li>
-            <li><a href="#planning-schedule" onClick={onLaunchPortal}>Planning & Schedule AI</a></li>
-            <li><a href="#procurement" onClick={onLaunchPortal}>Procurement & Vendor AI</a></li>
-            <li><a href="#credit" onClick={onLaunchPortal}>Credit & Working Capital AI</a></li>
+            <li><a href="#cash" onClick={() => onLaunchPortal('cash')}>Cash & Bills AI (Live)</a></li>
+            <li><a href="#procurement" onClick={() => onLaunchPortal('procurement')}>Procurement & RFQ AI (Live)</a></li>
+            <li><a href="#scheduler" onClick={() => onLaunchPortal('scheduler')}>Site Scheduler & PM AI (Live)</a></li>
+            <li><a href="#estimator" onClick={() => onLaunchPortal('estimator')}>Estimator & Takeoff (Building)</a></li>
+            <li><a href="#quality" onClick={() => onLaunchPortal('quality')}>Quality & Snags (Building)</a></li>
           </ul>
         </div>
 
         <div>
-          <div className="footer-col-title">Platform</div>
+          <div className="footer-col-title">Core Modules</div>
           <ul className="footer-links">
-            <li><a href="#projects">Project Dashboard</a></li>
-            <li><a href="#drawings">CAD & Drawing Viewer</a></li>
-            <li><a href="#snags">Snags & Quality Inspection</a></li>
-            <li><a href="#cashflow">Financials & Payments</a></li>
-            <li><a href="#capital">BuildForce Capital (0% Credit)</a></li>
+            <li><a href="#projects" onClick={() => onLaunchPortal('sites')}>Site Dashboard</a></li>
+            <li><a href="#materials" onClick={() => onLaunchPortal('materials')}>Materials & Stock Inward</a></li>
+            <li><a href="#labour" onClick={() => onLaunchPortal('labour')}>Daily Worker Haazri & Wages</a></li>
+            <li><a href="#cashflow" onClick={() => onLaunchPortal('cashflow')}>12-Week Cashflow Planner</a></li>
+            <li><a href="#invoices" onClick={() => onLaunchPortal('cash')}>3-Way Invoice Audit</a></li>
           </ul>
         </div>
 
         <div>
-          <div className="footer-col-title">Company</div>
+          <div className="footer-col-title">System & Security</div>
           <ul className="footer-links">
-            <li><a href="#about">Our Story</a></li>
-            <li><a href="#careers">Careers (We're Hiring!)</a></li>
-            <li><a href="#security">Security & ISO 27001</a></li>
-            <li><a href="#contact" onClick={onOpenDemoModal}>Contact Sales</a></li>
-            <li><a href="#privacy">Privacy & Terms</a></li>
+            <li><a href="#security">Row Level Security (Supabase)</a></li>
+            <li><a href="#privacy">Local Browser Storage Mode</a></li>
+            <li><a href="#contact" onClick={onOpenDemoModal}>Contact Support</a></li>
           </ul>
         </div>
       </div>
 
       <div style={{ 
         maxWidth: 1160, 
-        margin: '0 auto', 
-        paddingTop: 24, 
+        margin: '36px auto 0 auto', 
+        paddingTop: 20, 
         borderTop: '1px solid #1e293b', 
         display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center',
-        flexWrap: 'wrap',
-        gap: 16,
+        justifyContent: 'space-between',
         fontSize: 12,
-        color: '#64748b'
+        color: '#64748b',
+        flexWrap: 'wrap',
+        gap: 12
       }}>
-        <div>
-          © {new Date().getFullYear()} BuildForce AI Technologies Private Limited. All rights reserved.
-        </div>
-        <div style={{ display: 'flex', gap: 20 }}>
-          <span>ISO 27001:2013 Certified</span>
-          <span>SOC 2 Type II Aligned</span>
-          <span>100% Indian Data Sovereignty</span>
-        </div>
+        <div>© {new Date().getFullYear()} BuildForce AI. Real site numbers, zero fake statistics.</div>
+        <div>Designed for small civil contractors with 1 to 10 active sites.</div>
       </div>
     </footer>
   );

@@ -3,7 +3,7 @@ import {
   Activity, AlertTriangle, CheckCircle2, Camera, ShieldAlert, 
   FileText, Users, Clock, ArrowRight, Zap, RefreshCw 
 } from 'lucide-react';
-import { PM_ALERTS } from '../../data/mockData';
+import { PM_ALERTS } from './conceptSampleData';
 import confetti from 'canvas-confetti';
 
 export function AgentProjectManager({ activeProject, onReplanSchedule }) {

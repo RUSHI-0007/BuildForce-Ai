@@ -20,7 +20,7 @@ export function LandingHero({ onOpenDemoModal, onOpenVideoModal, onLaunchPortal 
         </h1>
 
         <p className="hero-subheadline">
-          The all-in-one AI operating system designed specifically for independent civil contractors, residential builders, and trade specialists. Daily worker attendance, supervisor stock requisitions, 12-week cash runways, and 5 autonomous construction AI agents.
+          The all-in-one operating system designed specifically for independent civil contractors, residential builders, and trade specialists. Daily worker attendance, supervisor stock requisitions, 12-week cash runways, and working construction intelligence with contractor approval on every action.
         </p>
 
         <div className="hero-cta-group">

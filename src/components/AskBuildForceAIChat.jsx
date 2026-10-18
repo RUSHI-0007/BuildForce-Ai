@@ -12,11 +12,11 @@ export function AskBuildForceAIChat() {
   ]);
 
   const quickChips = [
-    "What is causing the 7-day delay in basement slab?",
-    "Show me top 3 vendors for 25mm PVC pipes",
+    "What is causing the delay in 1st Floor Slab?",
+    "Compare quotes for 25mm PVC pipes",
     "How much cement do we need this week?",
-    "Check our available credit limit",
-    "How does the Takeoff AI verify 99% accuracy?"
+    "Check our 12-week cash runway",
+    "How does 3-way invoice matching work?"
   ];
 
   const handleSend = (textToSend = null) => {
@@ -32,18 +32,18 @@ export function AskBuildForceAIChat() {
       let botResponse = "";
       const lower = query.toLowerCase();
 
-      if (lower.includes('delay') || lower.includes('basement')) {
-        botResponse = "Agent 02 (Project Manager AI) reports a 6% productivity lag on Lower Basement soil backfilling by mason crews (140 sqm completed vs 190 sqm planned). Agent 03 recommends re-sequencing East side plastering 5 days early to completely recover this delay.";
-      } else if (lower.includes('vendor') || lower.includes('pvc') || lower.includes('quote')) {
-        botResponse = "Agent 04 (Procurement AI) evaluated 3 vendors for 25mm PVC pipes. BuildForce Verified Direct offers ₹100/pipe with 30-day credit, saving ₹14,000 on the combined order vs local dealers.";
+      if (lower.includes('delay') || lower.includes('schedule') || lower.includes('cpm')) {
+        botResponse = "Site Scheduler & PM AI computes Critical Path Method (CPM) floats, detects worker attendance deficits from your daily haazri logs, and prepares recovery plans while preserving your Version 1 baseline.";
+      } else if (lower.includes('vendor') || lower.includes('quote') || lower.includes('procurement')) {
+        botResponse = "Procurement & RFQ AI evaluates quotes you type in from your local dealers, calculating landed costs, GST, transport, and credit terms to rank the most cost-effective option.";
       } else if (lower.includes('cement') || lower.includes('material') || lower.includes('stock')) {
-        botResponse = "Current on-site OPC 53 Grade cement inventory is 20 Bags against an upcoming requirement of 75 Bags (Deficit: 55 Bags). Agent 04 has auto-drafted RFQ #RFQ-2026-904 for 250 bags.";
-      } else if (lower.includes('credit') || lower.includes('capital') || lower.includes('limit')) {
-        botResponse = "Your project has unlocked ₹50,00,000 in revolving credit at 0% interest for 30 days via BuildForce Capital. ₹18.50 Lakhs has been drawn, leaving ₹31.50 Lakhs available buffer.";
-      } else if (lower.includes('accuracy') || lower.includes('takeoff') || lower.includes('boq')) {
-        botResponse = "Agent 01 (Estimation AI) calculates takeoffs by extracting vector CAD geometry and linking each volume back to source sheet DWG tags (e.g. DWG A-5). With our human-in-the-loop review framework, accuracy reaches up to 99%.";
+        botResponse = "Procurement AI calculates days of stock cover from actual outward consumption logs and alerts you when order-by dates are reached.";
+      } else if (lower.includes('credit') || lower.includes('cash') || lower.includes('runway') || lower.includes('wage')) {
+        botResponse = "Cash & Bills AI simulates your 12-week cashflow runway day-by-day, protecting Saturday worker wages first, checking dealer grace periods, and conducting 3-way invoice audits.";
+      } else if (lower.includes('takeoff') || lower.includes('boq') || lower.includes('drawing')) {
+        botResponse = "Estimator & Takeoff AI is currently marked 'Building'. You can record manual quantities and rates in the site ledger today.";
       } else {
-        botResponse = `Understood. I am running a correlation check across your 5 active agents for "${query}". Your project RK Towers is at 46% actual progress with 52% planned. All critical path milestones are monitored in real time.`;
+        botResponse = `Understood. I am cross-referencing your active site records for "${query}". Your site tasks, attendance logs, and material transactions are calculated live in your workspace.`;
       }
 
       setMessages(prev => [...prev, { sender: 'bot', text: botResponse }]);

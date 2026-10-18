@@ -1,32 +1,61 @@
-# BuildForce AI — Construction AI Workforce & Operating System
+# BuildForce AI — Construction Operating System for Small Contractors
 
-BuildForce AI is an autonomous, domain-trained AI workforce platform for modern construction builders, general contractors, developers, and project teams.
+BuildForce AI is a focused operational platform built for independent civil contractors, small residential builders, and trade specialists running 1 to 10 active sites.
 
-## 🚀 Key Features
+## 🔒 Security & Environment Configuration
 
-1. **Autonomous Construction AI Workforce (5 Core Agents)**:
-   - **Agent 01: Estimation & Takeoff AI**: Interactive CAD drawing viewer (DWG A-5, A-6, S-12) with layer scanning, dynamic BOQ calculation, and human-in-the-loop review.
-   - **Agent 02: Project Manager AI**: S-curve variance radar, anomaly & roadblock detection, computer vision honeycomb defect detection, and automated 1-click DPR generation.
-   - **Agent 03: Planning & Schedule AI**: Critical path Gantt timeline, 7-day delay simulation, and dynamic 1-click schedule recovery re-plan.
-   - **Agent 04: Procurement & Vendor AI**: Material deficit detector, 3-vendor quotation matrix comparison (BuildForce Verified Direct vs Raj Trade vs Sharma Steels), instant ₹14,000 savings calculation, and digital PO generation.
-   - **Agent 05: Credit & Working Capital AI**: Cashflow forecasting, ₹50 Lakh instant 0% interest revolving credit line with interactive drawdown slider, and automated 3-way invoice & GST auditor.
+> **IMPORTANT**:
+> - Never commit `.env` or any production secrets to Git.
+> - Store all environment variables in **Vercel's Project Settings → Environment Variables** (or your hosting provider's secret vault).
+> - Always enable **Row Level Security (RLS)** and appropriate access policies on any Supabase table storing business data.
+> - Use `.env.example` as a template with placeholder variable names only.
 
-2. **Full Portal Web Application (`portal.buildforce.ai`)**:
-   - Organization directory ("Velocity") with circular progress dials, search, "+ New Project" modal, and Excel export.
-   - Project Dashboard with S-curve variance, recent progress updates, schedule tasks, deadline tasks, and top tasks breakdown.
+## 🤖 Agents Status: What is Real vs. Building
 
-3. **Ask BuildForce AI Copilot**:
-   - Floating AI conversational copilot with construction domain intelligence and quick suggestion chips.
+### 3 Live Agents (Computed from Real Site Data)
+1. **Cash & Bills AI (`cash`)**:
+   - 12-week forward-looking cashflow simulation (Expected vs. Pessimistic).
+   - Priority-based allocation: worker wages protected first, dealer grace periods, non-critical material order shifts, and real funding gap identification.
+   - 3-Way Invoice Audit: Automated cross-match between Purchase Order, Delivery Challan, and Vendor Tax Invoice. Flags quantity, rate variance, line math, and HSN discrepancies.
+   - Credit Readiness Checklist: Replaces fake credit offers with genuine audit tracking to help contractors prepare verified bankable records.
 
-## 🛠️ Tech Stack & Running Locally
+2. **Procurement & RFQ AI (`procurement`)**:
+   - Stock runout and shortage forecasting based on real consumption rates, task need-by dates, and dealer lead times.
+   - Multi-dealer RFQ generator for WhatsApp dispatch in English, Hindi, and Marathi.
+   - Quote comparison with landed costs, credit terms, and delivery timeline penalties.
+   - Supplier scorecard derived from actual delivery receipts and invoice history.
 
-- **Framework**: React 19 + Vite
-- **Icons**: Lucide React
-- **Styling**: Vanilla CSS Design System with dark navy palette (`#071530`, `#0b1c3e`, `#1d4ed8`) and coral accents (`#eb4d4b`).
+3. **Site Scheduler & PM AI (`scheduler`)**:
+   - Critical Path Method (CPM) engine with early/late dates, float calculations, and predicted completion dates.
+   - Real planned vs. actual S-curve and Schedule Performance Index (SPI).
+   - Roadblock detection: low attendance, material shortages, and rain risk integration.
+   - Re-planning recovery generator that preserves Version 1 baseline while generating Version N+1.
+   - Client-safe Daily Progress Report (DPR) generator.
+
+### 2 Building Agents (Honest Roadmap)
+4. **Estimator & Takeoff AI (`estimator`)**: Under development. Currently supports manual quantity logging; automated drawing geometry takeoff is in active development.
+5. **Quality & Snags AI (`quality`)**: Under development. Pre-pour inspection checklists and photo-verified snag resolution are currently in progress.
+
+## 🛠️ Tech Stack & Scripts
+
+- **Framework**: React 19 + Vite (Plain JS/JSX)
+- **State**: React Context (`AppContext.jsx`) with versioned `localStorage` persistence
+- **Testing**: Vitest (`npm test`)
+- **Linting**: Oxlint (`npm run lint`)
 
 ```bash
+# Install dependencies
 npm install
-npm run dev
-```
 
-Server runs at `http://localhost:5173/`.
+# Run local development server
+npm run dev
+
+# Run unit tests
+npm test
+
+# Run linter
+npm run lint
+
+# Production build
+npm run build
+```

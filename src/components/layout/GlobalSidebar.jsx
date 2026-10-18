@@ -22,7 +22,7 @@ export function GlobalSidebar({ collapsed, onToggleCollapse, onBackToLanding }) 
       style={{
         width: collapsed ? '68px' : '260px',
         minWidth: collapsed ? '68px' : '260px',
-        background: '#0f1d3b', // Powerplay dark navy
+        background: '#0f1d3b', // Deep dark navy
         color: '#c8d6f0',
         height: '100vh',
         display: 'flex',
@@ -482,7 +482,7 @@ export function GlobalSidebar({ collapsed, onToggleCollapse, onBackToLanding }) 
               color: '#000000',
               letterSpacing: '0.04em'
             }}>
-              5 AGENTS
+              3 LIVE • 2 DEV
             </span>
           )}
         </div>

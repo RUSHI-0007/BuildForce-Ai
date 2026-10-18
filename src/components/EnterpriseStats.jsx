@@ -1,11 +1,10 @@
 import React from 'react';
-import { ShieldCheck, Smartphone, Sliders, MessageSquare, Star, Zap, CheckCircle2, IndianRupee } from 'lucide-react';
-import { TESTIMONIALS } from '../data/mockData';
+import { Smartphone, CheckCircle2, IndianRupee, FileText, Truck, Calendar } from 'lucide-react';
 
 export function EnterpriseStats() {
   return (
     <>
-      {/* Visual Live Picture Section - Tailored for Small Contractors */}
+      {/* Realities for Small Contractors */}
       <section style={{ 
         background: 'linear-gradient(180deg, #f8fafc 0%, #e2e8f0 100%)', 
         padding: '80px 24px', 
@@ -46,9 +45,9 @@ export function EnterpriseStats() {
           }}>
             <div style={{ textAlign: 'left', borderRight: '1px solid #e2e8f0', paddingRight: 16 }}>
               <div style={{ fontSize: 13, color: '#0f766e', fontWeight: 800 }}>01. ZERO POCKET DIARIES</div>
-              <div style={{ fontSize: 16, fontWeight: 700, color: '#0f172a', margin: '8px 0' }}>Daily Haazri & Overtime</div>
+              <div style={{ fontSize: 16, fontWeight: 700, color: '#0f172a', margin: '8px 0' }}>Daily Haazri & Advances</div>
               <div style={{ fontSize: 13, color: '#475569', lineHeight: 1.5 }}>
-                Supervisors log worker attendance and overtime in 2 minutes. Saturday wage totals and advance cuts are 100% automated.
+                Supervisors log worker attendance in 2 minutes. Saturday wage payouts and daily chai/kharcha deductions are automated.
               </div>
             </div>
 
@@ -56,15 +55,15 @@ export function EnterpriseStats() {
               <div style={{ fontSize: 13, color: '#059669', fontWeight: 800 }}>02. STOP CASH BLEED</div>
               <div style={{ fontSize: 16, fontWeight: 700, color: '#0f172a', margin: '8px 0' }}>12-Week Cashflow Runway</div>
               <div style={{ fontSize: 13, color: '#475569', lineHeight: 1.5 }}>
-                Simulate homeowner payment delays before paying Saturday wages and local dealers. Never run out of cash on site.
+                Simulate client payment delays before committing to dealer payables and Saturday wages. Never run out of cash on site.
               </div>
             </div>
 
             <div style={{ textAlign: 'left' }}>
-              <div style={{ fontSize: 13, color: '#ea580c', fontWeight: 800 }}>03. ZERO UNPAID EXTRA WORK</div>
-              <div style={{ fontSize: 16, fontWeight: 700, color: '#0f172a', margin: '8px 0' }}>WhatsApp Client Sign-offs</div>
+              <div style={{ fontSize: 13, color: '#ea580c', fontWeight: 800 }}>03. ZERO DISCREPANCIES</div>
+              <div style={{ fontSize: 16, fontWeight: 700, color: '#0f172a', margin: '8px 0' }}>3-Way Invoice Matching</div>
               <div style={{ fontSize: 13, color: '#475569', lineHeight: 1.5 }}>
-                Homeowners approve extra false ceiling, tile or plumbing change orders directly on WhatsApp before work begins.
+                Check billed quantity against gate delivery challans and PO rates before approving dealer payments.
               </div>
             </div>
           </div>
@@ -82,91 +81,71 @@ export function EnterpriseStats() {
               Simple for Supervisors. Powerful for Contractors.
             </h3>
             <p style={{ color: '#475569', fontSize: 15, marginTop: 8 }}>
-              No complex training. No weeks of setup. Your site team is up and running in 10 minutes directly on WhatsApp and mobile.
+              No complex training. No enterprise bloat. Keep supervisors focused on daily site actuals while you maintain financial control.
             </p>
           </div>
 
           <div className="enterprise-grid">
             <div>
               <div style={{ fontSize: 11, fontWeight: 800, color: '#0f766e', textTransform: 'uppercase', marginBottom: 6 }}>
-                MOBILE-FIRST SIMPLICITY
+                MOBILE-FRIENDLY ENTRY
               </div>
               <div style={{ fontSize: 14, fontWeight: 700, color: '#0f172a' }}>
-                Works on any Android phone or tablet on site, even with patchy 4G
+                Quick entry forms for daily worker attendance, material inward, and site snags
               </div>
             </div>
 
             <div>
               <div style={{ fontSize: 11, fontWeight: 800, color: '#0f766e', textTransform: 'uppercase', marginBottom: 6 }}>
-                WHATSAPP CONNECTED
+                WHATSAPP READY
               </div>
               <div style={{ fontSize: 14, fontWeight: 700, color: '#0f172a' }}>
-                Daily site photos, client sign-offs, and dealer POs dispatched via WhatsApp
+                One-tap RFQ requests and client progress summaries formatted for WhatsApp
               </div>
             </div>
 
             <div>
               <div style={{ fontSize: 11, fontWeight: 800, color: '#0f766e', textTransform: 'uppercase', marginBottom: 6 }}>
-                ROLE-BASED VIEWS
+                CONTRACTOR VISIBILITY
               </div>
               <div style={{ fontSize: 14, fontWeight: 700, color: '#0f172a' }}>
-                Contractor has full financial control; supervisors see clean daily field tools
+                See active sites, critical task float, and supplier payables in one dashboard
               </div>
             </div>
 
             <div>
               <div style={{ fontSize: 11, fontWeight: 800, color: '#0f766e', textTransform: 'uppercase', marginBottom: 6 }}>
-                WORKING CAPITAL BUFFER
+                CREDIT READINESS AUDIT
               </div>
               <div style={{ fontSize: 14, fontWeight: 700, color: '#0f172a' }}>
-                Instant ₹5L–₹50L credit line for emergency cement and Saturday wages
+                Structured invoice matching, muster rolls, and cash records for future bank readiness
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Growing Every Small Builder: Stats */}
+      {/* Core Workflow Pillars */}
       <section className="stats-section">
-        <h2 className="stats-title">Empowering 10,000+ Independent Builders & Trade Specialists</h2>
+        <h2 className="stats-title">The Three Live Operating Pillars</h2>
         
         <div className="stats-grid">
           <div>
-            <div className="stat-item-number">12,400+</div>
+            <div className="stat-item-number" style={{ color: '#10b981' }}>12 Weeks</div>
             <div className="stat-item-label">
-              Residential & Commercial Sites Delivered
+              Day-by-Day Cash & Wage Runway Simulation
             </div>
           </div>
 
           <div>
-            <div className="stat-item-number">₹1.8 Cr+</div>
-            <div className="stat-item-label">Daily Worker Wages Tracked & Disbursed</div>
+            <div className="stat-item-number" style={{ color: '#fb923c' }}>3-Way</div>
+            <div className="stat-item-label">PO vs Delivery Challan vs Invoice Verification</div>
           </div>
 
           <div>
-            <div className="stat-item-number">98.4%</div>
-            <div className="stat-item-label">Zero-Dispute Client Handover Rate</div>
+            <div className="stat-item-number" style={{ color: '#38bdf8' }}>CPM</div>
+            <div className="stat-item-label">Critical Path Schedule & Float Analysis</div>
           </div>
-        </div>
-
-        {/* Customer Testimonials Grid */}
-        <div className="testimonials-grid">
-          {TESTIMONIALS.map((t, idx) => (
-            <div key={idx} className="testimonial-card">
-              <div style={{ display: 'flex', gap: 2, marginBottom: 12 }}>
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} size={15} fill="#f59e0b" color="#f59e0b" />
-                ))}
-              </div>
-              <div className="testimonial-quote">"{t.quote}"</div>
-              <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: 14 }}>
-                <strong style={{ fontSize: 14, color: '#0f172a' }}>{t.author}</strong>
-                <div style={{ fontSize: 12, color: '#64748b' }}>
-                  {t.role}, {t.company} ({t.city})
-                </div>
-              </div>
-            </div>
-          ))}
         </div>
       </section>
     </>

@@ -21,8 +21,8 @@ export function InteractiveAgentTabs({ onLaunchPortalWithAgent }) {
           desc: 'Reads residential & commercial CAD floor plans, detects structural columns/slabs and builds accurate BOQs.'
         },
         {
-          title: '✦ Takeoff AI guarantees 99% Takeoff Accuracy',
-          desc: 'Calculates exact concrete cum, TMT steel MT, brickwork sqm, and tile areas with contractor markup.'
+          title: 'Structured Quantity & BOQ Takeoff (Concept Preview)',
+          desc: 'Log concrete cum, TMT steel MT, brickwork sqm, and tile areas with contractor markup.'
         },
         {
           title: 'Audit-ready Source Sheet Citations',
@@ -38,7 +38,7 @@ export function InteractiveAgentTabs({ onLaunchPortalWithAgent }) {
             <div style={{ background: '#132854', padding: 12, borderRadius: 8 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 6 }}>
                 <span style={{ color: '#93c5fd' }}>DWG A-3 Kothrud Residence Villa</span>
-                <span style={{ color: '#34d399', fontWeight: 700 }}>99.2% Confidence</span>
+                <span style={{ color: '#38bdf8', fontWeight: 600 }}>Sample Takeoff</span>
               </div>
               <div style={{ fontSize: 14, fontWeight: 700, color: '#fff' }}>5" Reinforced Concrete Slab & Beams (M20)</div>
               <div style={{ fontSize: 12, color: '#cbd5e1', marginTop: 4 }}>
@@ -513,10 +513,10 @@ export function InteractiveAgentTabs({ onLaunchPortalWithAgent }) {
           THE BUILDFORCE AI WORKFORCE SUITE
         </div>
         <h3 style={{ fontSize: 32, fontWeight: 800, color: '#fff', marginBottom: 12 }}>
-          5 Autonomous Agents. Built Exclusively for Construction.
+          Contractor Intelligence Suite. Built for Small Civil Projects.
         </h3>
         <p style={{ color: '#94a3b8', fontSize: 15, maxWidth: 640, margin: '0 auto 40px' }}>
-          Trained on ₹19,950+ Cr of construction projects to understand real-world Indian site conditions, vendors, and workflows.
+          Real calculated numbers from your daily site records. No corporate fluff or unverified percentages.
         </p>
 
         <div className="agents-overview-grid">

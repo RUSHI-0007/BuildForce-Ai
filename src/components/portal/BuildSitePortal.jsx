@@ -67,7 +67,7 @@ export function BuildSitePortal({ onBackToLanding, initialAgent = null }) {
     <div style={{
       display: 'flex',
       minHeight: '100vh',
-      background: '#f5f6fa', // Powerplay light gray content area
+      background: '#f5f6fa', // Light gray content area
       fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
       color: '#0f172a'
     }}>

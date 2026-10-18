@@ -46,7 +46,7 @@ export function DemoRequestModal({ isOpen, onClose, onLaunchPortal }) {
                 Take Demo with Construction AI Expert
               </h3>
               <p style={{ fontSize: 12, color: '#64748b' }}>
-                Join 40,000+ construction businesses running on BuildForce
+                For civil contractors and small builders running 1 to 10 active sites
               </p>
             </div>
           </div>

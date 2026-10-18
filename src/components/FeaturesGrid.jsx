@@ -3,19 +3,12 @@ import {
   Sparkles, CheckCircle2, ArrowRight, ShieldCheck, 
   Clock, AlertTriangle, TrendingUp, DollarSign, Building2 
 } from 'lucide-react';
-import confetti from 'canvas-confetti';
-
 export function FeaturesGrid({ onLaunchPortalWithAgent }) {
   const [procurementOrdered, setProcurementOrdered] = useState(false);
 
   const handlePlaceOrder = (e) => {
     e.stopPropagation();
     setProcurementOrdered(true);
-    confetti({
-      particleCount: 80,
-      spread: 60,
-      origin: { y: 0.7 }
-    });
   };
 
   return (
@@ -344,15 +337,15 @@ export function FeaturesGrid({ onLaunchPortalWithAgent }) {
           </button>
         </div>
 
-        {/* Card 4: REVOLVING CREDIT FOR SMALL CONTRACTORS */}
+        {/* Card 4: CASH & BILLS AI */}
         <div className="bento-card-regular">
           <div>
-            <div className="bento-category">CONTRACTOR WORKING CAPITAL</div>
+            <div className="bento-category">CASH & BILLS INTELLIGENCE</div>
             <h3 className="bento-title">
-              Instant UPI credit line to pay Saturday labour & suppliers
+              12-week cash runway simulation & 3-way invoice matching
             </h3>
             <p style={{ color: '#475569', fontSize: 14, lineHeight: 1.5, marginBottom: 20 }}>
-              Never let delayed homeowner checks halt your masons. Draw instant liquidity directly into your contractor bank account.
+              Forecast Saturday wage requirements against delayed client checks. Audit dealer tax invoices against gate delivery challans.
             </p>
 
             <div style={{ 
@@ -365,22 +358,22 @@ export function FeaturesGrid({ onLaunchPortalWithAgent }) {
               gap: 8
             }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span style={{ fontSize: 11, color: '#065f46', fontWeight: 700 }}>CONTRACTOR CREDIT LINE</span>
-                <span style={{ fontSize: 10, color: '#059669', fontWeight: 700 }}>Instant UPI Available</span>
+                <span style={{ fontSize: 11, color: '#065f46', fontWeight: 700 }}>LIVE CASH & INVOICE ENGINE</span>
+                <span style={{ fontSize: 10, color: '#059669', fontWeight: 700 }}>Real Calculations</span>
               </div>
               <div style={{ fontSize: 14, fontWeight: 800, color: '#0f172a' }}>
-                Unlocked <span style={{ color: '#059669' }}>₹15 Lakhs credit facility</span> for your active sites
+                Protect Saturday wages & verify dealer bills before paying
               </div>
-              <div style={{ fontSize: 11, color: '#475569' }}>
-                • 0% interest for first 30 days<br />
-                • 1-click UPI payout for Saturday labour haazri<br />
-                • Repay seamlessly when client milestone check clears
+              <div style={{ fontSize: 11, color: '#475569', lineHeight: 1.5 }}>
+                • 12-week forward runway in Expected & Pessimistic scenarios<br />
+                • Automated 3-way match: PO vs Challan vs Tax Invoice<br />
+                • Credit Readiness checklist to build verifiable banking records
               </div>
             </div>
           </div>
 
           <button 
-            onClick={() => onLaunchPortalWithAgent('credit_cashflow')}
+            onClick={() => onLaunchPortalWithAgent('cash')}
             style={{ 
               marginTop: 16, 
               color: '#0f766e', 
@@ -391,7 +384,7 @@ export function FeaturesGrid({ onLaunchPortalWithAgent }) {
               gap: 6 
             }}
           >
-            <span>Manage Working Capital</span>
+            <span>Open Cash & Bills AI</span>
             <ArrowRight size={14} />
           </button>
         </div>
