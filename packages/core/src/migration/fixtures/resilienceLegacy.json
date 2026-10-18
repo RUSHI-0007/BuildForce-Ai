@@ -1,0 +1,9 @@
+{
+  "buildsite_projects": "[{\"id\":\"site_edge_1\",\"name\":\"Edge Project\",\"budget\":-500,\"progress\":150,\"status\":\"UnknownStatus\"}]",
+  "buildsite_tasks": "[{\"id\":\"tsk_edge_1\",\"name\":\"Task No Project\",\"duration\":0,\"progress\":-10}]",
+  "buildsite_materials": "[{\"id\":\"mat_edge_1\",\"name\":\"Sand\",\"unit\":\"Tons\",\"in_stock\":-5,\"unit_price\":\"invalid_price\",\"min_threshold\":-2}]",
+  "buildsite_material_tx": "[{\"id\":\"tx_edge_1\",\"item_id\":\"mat_edge_1\",\"type\":\"inward\",\"quantity\":5}]",
+  "buildsite_labour": "[{\"id\":\"lab_edge_1\",\"name\":\"Shankar\",\"daily_wage\":\"invalid_wage\",\"status\":\"Active\"}]",
+  "buildsite_attendance": "[{\"id\":\"att_edge_1\",\"labour_id\":\"lab_edge_1\",\"date\":\"2026-10-18\",\"status\":\"UNKNOWN_STATUS\",\"advance_paid\":-50}]",
+  "buildsite_payments": "[{\"id\":\"pay_edge_1\",\"amount\":\"0\",\"type\":\"EXPENSE\",\"status\":\"unknown\"}]"
+}

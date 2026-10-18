@@ -61,10 +61,14 @@ export function migrateProjects(raw) {
 
   for (const item of list) {
     if (!item || typeof item !== 'object') continue;
+    const rawBudget = Number(item.budget ?? 0);
+    const budget = (!isNaN(rawBudget) && rawBudget >= 0) ? rawBudget : 0;
+    const rawProgress = Number(item.progress ?? 0);
+    const progress = !isNaN(rawProgress) ? Math.min(100, Math.max(0, rawProgress)) : 0;
     const transformed = {
       ...item,
-      budget: Number(item.budget ?? 0),
-      progress: Math.min(100, Math.max(0, Number(item.progress ?? 0))),
+      budget,
+      progress,
       status: ['Planning', 'In Progress', 'On Hold', 'Completed'].includes(item.status) ? item.status : 'In Progress'
     };
     const validation = validateProject(transformed);
@@ -122,11 +126,14 @@ export function migrateMaterials(raw) {
 
   for (const item of list) {
     if (!item || typeof item !== 'object') continue;
+    const rawStock = Number(item.in_stock ?? 0);
+    const rawPrice = Number(item.unit_price ?? 0);
+    const rawThreshold = Number(item.min_threshold ?? 0);
     const transformed = {
       ...item,
-      in_stock: Math.max(0, Number(item.in_stock ?? 0)),
-      unit_price: Math.max(0, Number(item.unit_price ?? 0)),
-      min_threshold: Math.max(0, Number(item.min_threshold ?? 0))
+      in_stock: (!isNaN(rawStock) && rawStock >= 0) ? rawStock : 0,
+      unit_price: (!isNaN(rawPrice) && rawPrice >= 0) ? rawPrice : 0,
+      min_threshold: (!isNaN(rawThreshold) && rawThreshold >= 0) ? rawThreshold : 0
     };
     const validation = validateMaterial(transformed);
     if (validation.valid) {
@@ -188,7 +195,7 @@ export function migrateLabour(raw) {
     const wage = Number(item.daily_wage ?? 0);
     const transformed = {
       ...item,
-      daily_wage: wage > 0 ? wage : 500,
+      daily_wage: (!isNaN(wage) && wage > 0) ? wage : 500,
       status: item.status === 'Inactive' ? 'Inactive' : 'Active'
     };
     const validation = validateLabour(transformed);
@@ -217,10 +224,11 @@ export function migrateAttendance(raw) {
   for (const item of list) {
     if (!item || typeof item !== 'object') continue;
     const normalizedStatus = String(item.status || 'PRESENT').toUpperCase();
+    const rawAdv = Number(item.advance_paid ?? 0);
     const transformed = {
       ...item,
       status: ['PRESENT', 'ABSENT', 'HALF_DAY'].includes(normalizedStatus) ? normalizedStatus : 'PRESENT',
-      advance_paid: Math.max(0, Number(item.advance_paid ?? 0))
+      advance_paid: (!isNaN(rawAdv) && rawAdv >= 0) ? rawAdv : 0
     };
     const validation = validateAttendance(transformed);
     if (validation.valid) {
@@ -253,9 +261,10 @@ export function migratePayments(raw) {
       status = item.type === 'EXPENSE' ? 'Paid' : 'Received';
     }
 
+    const rawAmount = Number(item.amount ?? 0);
     const transformed = {
       ...item,
-      amount: Math.max(1, Number(item.amount ?? 0)),
+      amount: (!isNaN(rawAmount) && rawAmount > 0) ? rawAmount : 1,
       type: String(item.type || 'INCOME').toUpperCase(),
       status
     };

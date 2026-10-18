@@ -1,5 +1,10 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import legacyLocalStorageFixture from './fixtures/legacyLocalStorage.json';
+import {
+  FIXTURES,
+  legacyLocalStorageFixture,
+  minimalLegacyFixture,
+  resilienceLegacyFixture
+} from './fixtures/index.js';
 import {
   migrateLocalStorage,
   migrateLegacyState,
@@ -231,6 +236,71 @@ describe('Storage Migration Engine (packages/core/src/migration)', () => {
       const result = migrateLocalStorage(null);
       expect(result.success).toBe(false);
       expect(result.errors).toContain('Invalid storage object provided');
+    });
+  });
+
+  describe('Multiple Fixtures Support (packages/core/src/migration/fixtures)', () => {
+    it('supports and verifies all multiple fixture definitions', () => {
+      expect(FIXTURES).toBeDefined();
+      expect(Object.keys(FIXTURES)).toEqual(['full', 'minimal', 'resilience']);
+      expect(typeof FIXTURES.full).toBe('object');
+      expect(typeof FIXTURES.minimal).toBe('object');
+      expect(typeof FIXTURES.resilience).toBe('object');
+    });
+
+    it('migrates minimal legacy fixture cleanly', () => {
+      const { state, report } = migrateLegacyState(minimalLegacyFixture);
+      expect(report.success).toBe(true);
+      expect(state.projects).toHaveLength(1);
+      expect(state.projects[0].budget).toBe(150000);
+      expect(typeof state.projects[0].budget).toBe('number');
+      expect(state.labour[0].daily_wage).toBe(600);
+      expect(typeof state.labour[0].daily_wage).toBe('number');
+      expect(state.payments[0].status).toBe('Pending'); // 'Due Soon' normalized to 'Pending'
+    });
+
+    it('migrates resilience legacy fixture auto-correcting edge cases and corrupted fields', () => {
+      const { state, report } = migrateLegacyState(resilienceLegacyFixture);
+      expect(report.success).toBe(true);
+
+      // Clamps invalid progress (> 100) to 100 and normalizes status to 'In Progress'
+      expect(state.projects[0].progress).toBe(100);
+      expect(state.projects[0].status).toBe('In Progress');
+
+      // Task duration 0 corrected to 1
+      expect(state.tasks[0].duration_days).toBe(1);
+
+      // Labour daily wage 'invalid_wage' defaulted to positive wage (500)
+      expect(state.labour[0].daily_wage).toBe(500);
+
+      // Attendance UNKNOWN_STATUS normalized to 'PRESENT' and negative advance clamped to 0
+      expect(state.attendance[0].status).toBe('PRESENT');
+      expect(state.attendance[0].advance_paid).toBe(0);
+
+      // Payment zero amount clamped to minimum 1 and unknown status normalized to 'Paid' for EXPENSE
+      expect(state.payments[0].amount).toBe(1);
+      expect(state.payments[0].status).toBe('Paid');
+    });
+
+    it('successfully runs migrateLocalStorage across all multiple fixtures', () => {
+      for (const [fixtureName, fixtureData] of Object.entries(FIXTURES)) {
+        const store = new Map();
+        const testStorage = {
+          getItem: (k) => store.has(k) ? store.get(k) : null,
+          setItem: (k, v) => store.set(k, String(v)),
+          removeItem: (k) => store.delete(k),
+          clear: () => store.clear()
+        };
+
+        for (const [k, v] of Object.entries(fixtureData)) {
+          testStorage.setItem(k, v);
+        }
+
+        const result = migrateLocalStorage(testStorage);
+        expect(result.success, `Fixture "${fixtureName}" should migrate successfully`).toBe(true);
+        expect(testStorage.getItem(MIGRATION_FLAG_KEY)).toBe('true');
+        expect(testStorage.getItem(`${LEGACY_STORAGE_KEYS.PROJECTS}_v1`)).toBeDefined();
+      }
     });
   });
 });

@@ -1,0 +1,10 @@
+{
+  "buildsite_projects": "[{\"id\":\"site_min_1\",\"name\":\"Small Renovation\",\"budget\":\"150000\"}]",
+  "buildsite_active_project_id": "site_min_1",
+  "buildsite_tasks": "[{\"id\":\"tsk_min_1\",\"project_id\":\"site_min_1\",\"name\":\"Demolition\",\"duration\":\"2\"}]",
+  "buildsite_materials": "[{\"id\":\"mat_min_1\",\"name\":\"Cement\",\"unit\":\"Bags\",\"in_stock\":\"20\",\"unit_price\":\"350\",\"min_threshold\":\"10\"}]",
+  "buildsite_material_tx": "[{\"id\":\"tx_min_1\",\"item_id\":\"mat_min_1\",\"type\":\"INWARD\",\"quantity\":\"20\"}]",
+  "buildsite_labour": "[{\"id\":\"lab_min_1\",\"name\":\"Sunil Worker\",\"daily_wage\":\"600\"}]",
+  "buildsite_attendance": "[{\"id\":\"att_min_1\",\"labour_id\":\"lab_min_1\",\"date\":\"2026-10-18\",\"status\":\"PRESENT\",\"advance_paid\":\"100\"}]",
+  "buildsite_payments": "[{\"id\":\"pay_min_1\",\"amount\":\"50000\",\"type\":\"INCOME\",\"status\":\"Due Soon\"}]"
+}
