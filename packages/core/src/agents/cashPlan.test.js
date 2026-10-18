@@ -45,4 +45,25 @@ describe('Cash Plan Engine (packages/core/src/agents/cashPlan.js)', () => {
     const planWithOverride = calculateCashRunway(snapshot, { wageWeekday: 1 }); // Monday
     expect(planWithOverride.wageWeekday).toBe(1);
   });
+
+  describe('ISSUE-005 Regression: Overdrawn state instead of negative runway', () => {
+    it('reports overdrawn state and zero runwayWeeks when outflows exceed opening balance and inflows', () => {
+      const overdrawnSnapshot = {
+        cashSettings: { openingBalance: 50000, overheadPerWeek: 15000 },
+        payments: [
+          { type: 'INCOME', status: 'Received', amount: 20000 },
+          { type: 'EXPENSE', status: 'Paid', amount: 150000 } // Deficit: 50k + 20k - 150k = -80k
+        ],
+        labour: [{ id: 'l1', daily_wage: 1000, status: 'Active' }]
+      };
+
+      const plan = calculateCashRunway(overdrawnSnapshot);
+      expect(plan.currentCash).toBe(-80000);
+      expect(plan.isOverdrawn).toBe(true);
+      expect(plan.status).toBe('OVERDRAWN');
+      expect(plan.runwayWeeks).toBe(0);
+      expect(plan.isHealthy).toBe(false);
+      expect(plan.availableForVendors).toBe(0);
+    });
+  });
 });

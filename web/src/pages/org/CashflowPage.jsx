@@ -18,6 +18,7 @@ export function CashflowPage() {
     .reduce((acc, p) => acc + (Number(p.amount) || 0), 0);
 
   const netLiquidity = totalInflows - totalOutflows;
+  const isOverdrawn = netLiquidity < 0;
   const avgWeeklyBurn = 125000; // ~1.25L per week for labour + basic materials
   const runwayWeeks = netLiquidity > 0 ? (netLiquidity / avgWeeklyBurn).toFixed(1) : 0;
 
@@ -64,14 +65,14 @@ export function CashflowPage() {
           value={`₹${(netLiquidity / 100000).toFixed(2)} Lakhs`} 
           subtitle="Cleared balance across active accounts" 
           icon={BadgeIndianRupee} 
-          color="#16a34a" 
+          color={isOverdrawn ? '#dc2626' : '#16a34a'} 
         />
         <StatsCard 
           title="Estimated Runway" 
-          value={`${runwayWeeks} Weeks`} 
-          subtitle={`Based on ~₹1.25L weekly site burn`} 
+          value={isOverdrawn ? 'Overdrawn' : `${runwayWeeks} Weeks`} 
+          subtitle={isOverdrawn ? 'Immediate capital required' : 'Based on ~₹1.25L weekly site burn'} 
           icon={Calendar} 
-          color={Number(runwayWeeks) >= 4 ? '#2563eb' : '#dc2626'} 
+          color={isOverdrawn ? '#dc2626' : (Number(runwayWeeks) >= 4 ? '#2563eb' : '#dc2626')} 
         />
         <StatsCard 
           title="Total Outflows (Materials + Wages)" 
@@ -84,9 +85,9 @@ export function CashflowPage() {
 
       {/* Runway Alert Box */}
       <div style={{
-        background: Number(runwayWeeks) >= 3 ? '#f0fdf4' : '#fffbeb',
+        background: isOverdrawn ? '#fef2f2' : (Number(runwayWeeks) >= 3 ? '#f0fdf4' : '#fffbeb'),
         border: '1px solid',
-        borderColor: Number(runwayWeeks) >= 3 ? '#bbf7d0' : '#fef08a',
+        borderColor: isOverdrawn ? '#fecaca' : (Number(runwayWeeks) >= 3 ? '#bbf7d0' : '#fef08a'),
         borderRadius: '12px',
         padding: '18px 22px',
         marginBottom: '24px',
@@ -97,19 +98,25 @@ export function CashflowPage() {
         gap: '14px'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-          {Number(runwayWeeks) >= 3 ? (
+          {isOverdrawn ? (
+            <AlertTriangle size={28} style={{ color: '#dc2626' }} />
+          ) : Number(runwayWeeks) >= 3 ? (
             <ShieldCheck size={28} style={{ color: '#16a34a' }} />
           ) : (
             <AlertTriangle size={28} style={{ color: '#d97706' }} />
           )}
           <div>
             <div style={{ fontSize: '15px', fontWeight: '700', color: '#0f172a', marginBottom: '2px' }}>
-              {Number(runwayWeeks) >= 3 
-                ? 'Healthy Cashflow Status: Operations Fully Funded' 
-                : 'Attention Needed: Client Milestone Billing Recommended'}
+              {isOverdrawn 
+                ? 'Critical Warning: Account Overdrawn' 
+                : (Number(runwayWeeks) >= 3 
+                  ? 'Healthy Cashflow Status: Operations Fully Funded' 
+                  : 'Attention Needed: Client Milestone Billing Recommended')}
             </div>
             <div style={{ fontSize: '13px', color: '#475569' }}>
-              Your current working capital covers approximately {runwayWeeks} weeks of routine labour wages and urgent cement/steel procurements.
+              {isOverdrawn
+                ? `Site expenses exceed cash inflows by ₹${Math.abs(netLiquidity).toLocaleString('en-IN')}. Immediate milestone billing or capital infusion is required.`
+                : `Your current working capital covers approximately ${runwayWeeks} weeks of routine labour wages and urgent cement/steel procurements.`}
             </div>
           </div>
         </div>

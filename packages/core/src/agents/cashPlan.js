@@ -63,9 +63,21 @@ export function calculateCashRunway(snapshot, options = {}) {
     });
   }
 
-  const runwayWeeks = totalWeeklyObligation > 0
-    ? Math.floor(currentCash / totalWeeklyObligation)
-    : 99;
+  const isOverdrawn = currentCash < 0;
+  const runwayWeeks = isOverdrawn
+    ? 0
+    : (totalWeeklyObligation > 0
+      ? Math.floor(currentCash / totalWeeklyObligation)
+      : 99);
+
+  let status;
+  if (isOverdrawn) {
+    status = 'OVERDRAWN';
+  } else if (runwayWeeks >= 4) {
+    status = 'HEALTHY';
+  } else {
+    status = 'WARNING';
+  }
 
   return {
     currentCash,
@@ -79,7 +91,9 @@ export function calculateCashRunway(snapshot, options = {}) {
     availableForVendors,
     runwayWeeks,
     wageWeekday,
-    isHealthy: runwayWeeks >= 4,
+    isOverdrawn,
+    status,
+    isHealthy: !isOverdrawn && runwayWeeks >= 4,
     weeklyForecast
   };
 }
