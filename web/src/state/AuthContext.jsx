@@ -1,41 +1,41 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { supabase } from '../api/supabaseClient';
-
-const AuthContext = createContext(null);
+import React, { useState, useEffect } from 'react';
+import { supabase } from '../services/supabaseClient';
+import { AuthContext } from './authContextInstance';
 
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(() => {
+    const savedUser = localStorage.getItem('buildsite_user');
+    if (savedUser) {
+      try {
+        return JSON.parse(savedUser);
+      } catch {
+        // fallback to default
+      }
+    }
+    const defaultContractor = {
+      id: 'user_omkar_01',
+      name: 'Omkar Patil',
+      email: 'omkar@omkarinfra.com',
+      role: 'Contractor / Owner',
+      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80'
+    };
+    try {
+      localStorage.setItem('buildsite_user', JSON.stringify(defaultContractor));
+    } catch {
+      // safe fallback
+    }
+    return defaultContractor;
+  });
   const [org, setOrg] = useState({
     id: 'org_primary_01',
     name: 'Omkar Infra & Builders',
     owner: 'Omkar Patil',
     plan: 'Starter Pro'
   });
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // 1. Check local saved session first
-    const savedUser = localStorage.getItem('buildsite_user');
-    if (savedUser) {
-      try {
-        setUser(JSON.parse(savedUser));
-      } catch (e) {
-        console.error('Failed to parse saved user', e);
-      }
-    } else {
-      // Default to contractor so user can immediately experience the portal without confusion
-      const defaultContractor = {
-        id: 'user_omkar_01',
-        name: 'Omkar Patil',
-        email: 'omkar@omkarinfra.com',
-        role: 'Contractor / Owner',
-        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80'
-      };
-      setUser(defaultContractor);
-      localStorage.setItem('buildsite_user', JSON.stringify(defaultContractor));
-    }
-
-    // 2. Listen to Supabase auth changes if client is configured
+    // Listen to Supabase auth changes if client is configured
     try {
       if (supabase && supabase.auth) {
         supabase.auth.getSession().then(({ data: { session } }) => {
@@ -68,11 +68,9 @@ export function AuthProvider({ children }) {
         });
 
         return () => subscription?.unsubscribe();
-      } else {
-        setLoading(false);
       }
     } catch {
-      setLoading(false);
+      // offline / client not ready
     }
   }, []);
 
@@ -133,8 +131,4 @@ export function AuthProvider({ children }) {
       {children}
     </AuthContext.Provider>
   );
-}
-
-export function useAuth() {
-  return useContext(AuthContext);
 }

@@ -1,13 +1,11 @@
 import React from 'react';
-import { useApp } from '../../context/AppContext';
-import { Calendar, AlertTriangle, CheckCircle2, Clock } from 'lucide-react';
+import { useApp } from '../../hooks/useApp';
+import { Calendar } from 'lucide-react';
 
-export function SiteSchedulerAgent({ activeProject }) {
-  const { tasks = [], issues = [], attendance = [] } = useApp();
+export function SiteSchedulerAgent({ _activeProject }) {
+  const { tasks = [] } = useApp();
 
-  const openIssues = issues.filter(i => i.status === 'Open');
   const completedTasks = tasks.filter(t => t.status === 'Completed');
-  const inProgressTasks = tasks.filter(t => t.status === 'In Progress');
 
   return (
     <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>

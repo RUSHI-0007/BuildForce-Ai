@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BookOpen, Plus, Search, Tag, IndianRupee } from 'lucide-react';
+import { Plus, Search } from 'lucide-react';
 import { Modal } from '../../components/ui/Modal';
 
 export function LibraryPage() {

@@ -1,54 +1,72 @@
 /**
  * Central Agent Registry
- * Defines all 5 agents with their live/building status, data inputs, and scope boundaries.
+ * Defines the 6-agent team: Capture, Scheduler & PM, Procurement & RFQ, Cash & Bills, Client Updates, and Coordinator.
+ * Each agent is marked 'preview' until its real logic, data models, and tests exist.
  */
 
 export const AGENT_REGISTRY = [
   {
-    id: 'cash',
-    name: 'Cash & Bills AI',
-    status: 'live',
-    tag: '12-Week Runway & 3-Way Audit',
-    purpose: 'Simulates 12-week forward cashflow, protects Saturday worker wages, and conducts 3-way matching between POs, challans, and invoices.',
+    id: 'capture',
+    name: 'Capture AI',
+    status: 'preview',
+    tag: 'Daily Voice/Photo Ingestion & Extraction',
+    purpose: 'Ingests raw supervisor WhatsApp voice notes, photos, and delivery challans into structured site records.',
     dataItUses: [
-      'Client payments received & milestone schedules',
-      'Daily attendance logs & wage run-rate',
-      'Approved/pending dealer invoices & credit days',
-      'Weekly firm overhead settings',
-      'Upcoming procurement PO commitments'
+      'Supervisor audio notes and transcriptions',
+      'Material delivery challan photos',
+      'Work progress site photos',
+      'Labour muster roll snapshots'
     ],
     whatItDoes: [
-      'Runs day-by-day cash simulation in Expected & Pessimistic scenarios',
-      'Never defers wages; flags deferrable dealer dues within grace periods',
-      'Conducts strict 3-way invoice audit (Quantity, Rate variance, Line math, GST HSN check)',
-      'Calculates undisputed recommended payable and held amounts',
-      'Provides Credit Readiness checklist (records captured, no loan offers)'
+      'Extracts attendance counts and material quantities from field reports',
+      'Flags quantity discrepancies before records enter the site ledger',
+      'Drafts site log entries for contractor confirmation'
     ],
     whatItDoesNot: [
-      'Never executes bank transfers or payments on its own',
-      'Never defers or cuts worker wages',
-      'Never offers unverified loans or fake revolving credit lines'
+      'Never commits unreviewed records without human verification',
+      'Never invents site logs or attendance records'
+    ]
+  },
+  {
+    id: 'scheduler',
+    name: 'Scheduler & PM AI',
+    status: 'preview',
+    tag: 'Critical Path, Delay Forecast & PM Radar',
+    purpose: 'Computes Critical Path Method (CPM) floats, tracks S-curve progress, flags crew deficits, and drafts recovery milestones.',
+    dataItUses: [
+      'Task durations, weights, and finish-to-start dependencies',
+      'Daily worker attendance logs from site supervisors',
+      'Material readiness alerts from Procurement AI',
+      'Open high-priority site issues & snags'
+    ],
+    whatItDoes: [
+      'Computes early/late starts, total float, and critical path',
+      'Calculates planned vs. actual S-curve progress',
+      'Flags tasks with crew attendance below required threshold',
+      'Generates recovery plans as Version N+1 while preserving baseline'
+    ],
+    whatItDoesNot: [
+      'Never mutates or overwrites the baseline Version 1 schedule',
+      'Never invents fake progress or hardcoded recovery dates'
     ]
   },
   {
     id: 'procurement',
     name: 'Procurement & RFQ AI',
-    status: 'live',
-    tag: 'Shortage Radar & Quote Ranking',
+    status: 'preview',
+    tag: 'Shortage Radar & Landed Cost RFQ',
     purpose: 'Forecasts material runouts, generates multi-dealer WhatsApp RFQs, and ranks typed dealer quotes by true landed cost.',
     dataItUses: [
       'Current on-site inventory counts',
-      'Average daily outward consumption rate (or task material needs)',
+      'Average daily outward consumption rate',
       'Task schedule need-by dates',
-      'Dealer lead times & delivery history',
       'Contractor-entered dealer quotes'
     ],
     whatItDoes: [
       'Calculates days of cover and triggers alerts before order-by deadlines',
       'Generates multilingual WhatsApp RFQ drafts (English, Hindi, Marathi)',
-      'Ranks typed dealer quotes by landed cost (Rate + GST + Transport - Credit benefit)',
-      'Penalizes or excludes quotes arriving after critical task need-by dates',
-      'Calculates real supplier scorecards from actual delivery challans'
+      'Ranks dealer quotes by landed cost including credit terms',
+      'Flags quotes arriving after critical need-by dates'
     ],
     whatItDoesNot: [
       'Never invents fake suppliers or artificial discounts',
@@ -56,66 +74,71 @@ export const AGENT_REGISTRY = [
     ]
   },
   {
-    id: 'scheduler',
-    name: 'Site Scheduler & PM AI',
-    status: 'live',
-    tag: 'Critical Path & Roadblock Radar',
-    purpose: 'Computes Critical Path Method (CPM) floats, tracks S-curve progress, flags crew deficits, and drafts client-safe DPRs.',
+    id: 'cash',
+    name: 'Cash & Bills AI',
+    status: 'preview',
+    tag: '12-Week Runway & 3-Way Audit',
+    purpose: 'Simulates 12-week forward cashflow, protects worker wages, and conducts 3-way matching between POs, challans, and invoices.',
     dataItUses: [
-      'Task durations, weights, and finish-to-start dependencies',
-      'Daily worker attendance logs from site supervisors',
-      'Material readiness alerts from Procurement AI',
-      'Open high-priority site issues & snags',
-      'Weather forecasts (rain risk detection)'
+      'Client payments received & milestone schedules',
+      'Daily attendance logs & wage run-rate',
+      'Approved/pending dealer invoices & credit days',
+      'Weekly firm overhead settings'
     ],
     whatItDoes: [
-      'Computes early/late starts, total float, and critical path',
-      'Calculates planned vs. actual S-curve and Schedule Performance Index (SPI)',
-      'Flags tasks with low crew attendance below required threshold',
-      'Generates recovery plans as Version N+1 while preserving Version 1 baseline',
-      'Synthesizes client-safe Daily Progress Reports for WhatsApp export'
+      'Runs day-by-day cash simulation in Expected & Pessimistic scenarios',
+      'Prioritizes worker wage reserves above vendor disbursements',
+      'Conducts 3-way invoice audit (Quantity, Rate variance, Line math)',
+      'Calculates undisputed recommended payable and held amounts'
     ],
     whatItDoesNot: [
-      'Never mutates or overwrites the baseline Version 1 schedule',
-      'Never makes unconfirmed changes to task milestones'
+      'Never executes bank transfers or payments on its own',
+      'Never defers or cuts worker wages',
+      'Never offers unverified loans or fake credit lines'
     ]
   },
   {
-    id: 'estimator',
-    name: 'Estimator & Takeoff AI',
-    status: 'building',
-    tag: 'Drawing Geometry Takeoff',
-    purpose: 'Automated quantity takeoff from 2D/3D architectural CAD drawings.',
+    id: 'client',
+    name: 'Client Updates AI',
+    status: 'preview',
+    tag: 'Transmittals & Client-Safe DPRs',
+    purpose: 'Synthesizes sanitized, client-safe progress updates and transmittal records from site events.',
     dataItUses: [
-      'Architectural drawings (DWG/PDF)',
-      'Standard Schedule of Rates (DSR/CSR)',
-      'Structural member specifications'
+      'Completed task milestones',
+      'Verified progress photographs',
+      'Material pour and casting events',
+      'Approved schedule updates'
     ],
     whatItDoes: [
-      'Currently supports manual item entry and rates library',
-      'Automated vector CAD layer scanning is under active development'
+      'Drafts polite, professional WhatsApp updates for clients',
+      'Filters out internal contractor margin, wage, and dispute details',
+      'Formats weekly executive progress bulletins with milestone proofs'
     ],
     whatItDoesNot: [
-      'Does not invent confidence scores or produce unverified bids without human review'
+      'Never leaks internal wage rates or contractor cost margins to clients',
+      'Never sends unreviewed client messages or invented progress reports'
     ]
   },
   {
-    id: 'quality',
-    name: 'Quality & Snags AI',
-    status: 'building',
-    tag: 'Checklists & Photographic Snags',
-    purpose: 'Structured pre-pour quality checklists and photo-verified snag rectification.',
+    id: 'coordinator',
+    name: 'Coordinator AI',
+    status: 'preview',
+    tag: 'Multi-Agent Consensus & Proposals',
+    purpose: 'Coordinates cross-agent findings, resolves schedule-cash shortages, deduplicates cross-agent alerts, and presents unified contractor proposals.',
     dataItUses: [
-      'Site inspection photographs',
-      'IS Code compliance standards (IS 456, IS 1200)',
-      'Supervisor daily snag entries'
+      'Material shortages from Procurement AI',
+      'CPM delay forecasts from Scheduler AI',
+      'Cash balances and runway from Cash & Bills AI',
+      'Supervisor updates from Capture AI'
     ],
     whatItDoes: [
-      'Currently supports manual issue logging and priority assignment',
-      'Computer-vision defect recognition is under active development'
+      'Correlates delays to material shortages and cash shortfalls',
+      'Deduplicates cross-agent notifications into single unified proposals',
+      'Produces prioritized multi-agent action items with trade-off analysis'
     ],
     whatItDoesNot: [
-      'Does not claim automated computer-vision defect accuracy without verification'
+      'Never invents unilateral actions or overrides individual agent domains',
+      'Never bypasses contractor confirmation on proposals'
     ]
   }
 ];

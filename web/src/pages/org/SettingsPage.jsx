@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { Settings, Database, Building2, User, Check, RefreshCw } from 'lucide-react';
-import { useAuth } from '../../context/AuthContext';
-import { useApp } from '../../context/AppContext';
+import { Database, Building2, Check, RefreshCw } from 'lucide-react';
+import { useAuth } from '../../hooks/useAuth';
+import { useApp } from '../../hooks/useApp';
 
 export function SettingsPage() {
   const { org, setOrg, user } = useAuth();

@@ -1,5 +1,4 @@
 import React from 'react';
-import { Smartphone, CheckCircle2, IndianRupee, FileText, Truck, Calendar } from 'lucide-react';
 
 export function EnterpriseStats() {
   return (

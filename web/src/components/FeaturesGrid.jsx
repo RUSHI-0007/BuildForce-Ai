@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { 
-  Sparkles, CheckCircle2, ArrowRight, ShieldCheck, 
-  Clock, AlertTriangle, TrendingUp, DollarSign, Building2 
+  Sparkles, CheckCircle2, ArrowRight 
 } from 'lucide-react';
 export function FeaturesGrid({ onLaunchPortalWithAgent }) {
   const [procurementOrdered, setProcurementOrdered] = useState(false);

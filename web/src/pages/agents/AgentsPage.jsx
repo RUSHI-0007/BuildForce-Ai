@@ -1,36 +1,36 @@
-import React, { useState } from 'react';
-import { Sparkles, Calendar, ShoppingBag, ShieldCheck, BadgeIndianRupee, FileSpreadsheet, Check, AlertCircle, ArrowRight, Clock } from 'lucide-react';
-import { useApp } from '../../context/AppContext';
+import React from 'react';
+import { Sparkles, Calendar, ShoppingBag, BadgeIndianRupee, Camera, Send, Network } from 'lucide-react';
+import { useApp } from '../../hooks/useApp';
 import { AGENT_REGISTRY } from '../../config/agentRegistry';
 import { CashBillsAgent } from '../../components/agents/CashBillsAgent';
 import { ProcurementRfqAgent } from '../../components/agents/ProcurementRfqAgent';
 import { SiteSchedulerAgent } from '../../components/agents/SiteSchedulerAgent';
 import { BuildingAgentCard } from '../../components/portal/BuildingAgentCard';
-import { AgentEstimation as ConceptEstimation } from '../../components/portal/concept_preview/AgentEstimation';
-import { AgentProjectManager as ConceptQuality } from '../../components/portal/concept_preview/AgentProjectManager';
 
 export function AgentsPage() {
   const { activeAgentId = 'cash', setActiveAgentId, activeProject } = useApp();
 
   const getIconForAgent = (id) => {
     switch (id) {
-      case 'cash': return BadgeIndianRupee;
-      case 'procurement': return ShoppingBag;
+      case 'capture': return Camera;
       case 'scheduler': return Calendar;
-      case 'estimator': return FileSpreadsheet;
-      case 'quality': return ShieldCheck;
+      case 'procurement': return ShoppingBag;
+      case 'cash': return BadgeIndianRupee;
+      case 'client': return Send;
+      case 'coordinator': return Network;
       default: return Sparkles;
     }
   };
 
   const getColorForAgent = (id) => {
     switch (id) {
-      case 'cash': return '#10b981';
-      case 'procurement': return '#fb923c';
-      case 'scheduler': return '#38bdf8';
-      case 'estimator': return '#f59e0b';
-      case 'quality': return '#ec4899';
-      default: return '#2563eb';
+      case 'capture': return '#6366f1';
+      case 'scheduler': return '#0284c7';
+      case 'procurement': return '#ea580c';
+      case 'cash': return '#059669';
+      case 'client': return '#7c3aed';
+      case 'coordinator': return '#2563eb';
+      default: return '#3b82f6';
     }
   };
 
@@ -41,7 +41,7 @@ export function AgentsPage() {
   return (
     <div style={{ padding: '20px 24px', maxWidth: '1600px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '20px' }}>
       
-      {/* 5-Agent Overview Hub & Status Bar */}
+      {/* 6-Agent Overview Hub & Status Bar */}
       <div style={{
         background: '#ffffff',
         borderRadius: '12px',
@@ -66,12 +66,12 @@ export function AgentsPage() {
             </div>
             <div>
               <h1 style={{ fontSize: '18px', fontWeight: '800', color: '#0f172a', margin: 0 }}>
-                Agent Hub
+                Agent Team Hub
               </h1>
               <div style={{ fontSize: '12px', color: '#64748b', display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
-                <span style={{ fontWeight: '700', color: '#059669' }}>● 3 of 5 agents live</span>
+                <span style={{ fontWeight: '700', color: '#0284c7' }}>● 6 AI Specialist Agents</span>
                 <span>•</span>
-                <span>2 in honest building roadmap</span>
+                <span>Marked Preview during core engine integration</span>
                 <span>•</span>
                 <span>Active Site: <strong>{activeProject?.name || 'All Sites'}</strong></span>
               </div>
@@ -79,13 +79,12 @@ export function AgentsPage() {
           </div>
         </div>
 
-        {/* 5 Agent Cards Grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '12px' }}>
+        {/* 6 Agent Cards Grid */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px' }}>
           {AGENT_REGISTRY.map((agent) => {
             const Icon = getIconForAgent(agent.id);
             const color = getColorForAgent(agent.id);
             const isSelected = currentAgentId === agent.id;
-            const isLive = agent.status === 'live';
 
             return (
               <div
@@ -125,13 +124,12 @@ export function AgentsPage() {
                     fontWeight: '800',
                     padding: '2px 6px',
                     borderRadius: '4px',
-                    background: isLive ? '#ecfdf5' : '#fef3c7',
-                    color: isLive ? '#059669' : '#b45309',
-                    border: '1px solid',
-                    borderColor: isLive ? '#a7f3d0' : '#fde68a',
+                    background: '#f0f9ff',
+                    color: '#0284c7',
+                    border: '1px solid #bae6fd',
                     textTransform: 'uppercase'
                   }}>
-                    {isLive ? 'Live' : 'Building'}
+                    PREVIEW
                   </span>
                 </div>
 
@@ -140,7 +138,7 @@ export function AgentsPage() {
                 </div>
 
                 <div style={{ marginTop: 'auto', paddingTop: '6px', borderTop: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#64748b' }}>
-                  <span>{isLive ? 'Calculates from live data' : 'Under development'}</span>
+                  <span>{agent.status === 'live' ? 'Calculates from live data' : 'Preview specifications'}</span>
                   {isSelected && <span style={{ color, fontWeight: '700' }}>Active View</span>}
                 </div>
               </div>
@@ -160,11 +158,8 @@ export function AgentsPage() {
         {currentAgentId === 'cash' && <CashBillsAgent activeProject={activeProject} />}
         {currentAgentId === 'procurement' && <ProcurementRfqAgent activeProject={activeProject} />}
         {currentAgentId === 'scheduler' && <SiteSchedulerAgent activeProject={activeProject} />}
-        {currentAgentId === 'estimator' && (
-          <BuildingAgentCard agent={currentAgent} conceptComponent={ConceptEstimation} />
-        )}
-        {currentAgentId === 'quality' && (
-          <BuildingAgentCard agent={currentAgent} conceptComponent={ConceptQuality} />
+        {['capture', 'client', 'coordinator'].includes(currentAgentId) && (
+          <BuildingAgentCard agent={currentAgent} />
         )}
       </div>
     </div>

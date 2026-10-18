@@ -1,9 +1,6 @@
 import React, { useState } from 'react';
-import { FileText, Download, CheckCircle, Calendar, Printer } from 'lucide-react';
-import { useApp } from '../../context/AppContext';
-
+import { FileText, Download } from 'lucide-react';
 export function ReportsPage() {
-  const { activeProject } = useApp();
   const [downloadingId, setDownloadingId] = useState(null);
 
   const reports = [

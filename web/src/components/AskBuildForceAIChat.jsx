@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Sparkles, Send, X, Bot, User, CornerDownLeft } from 'lucide-react';
+import { Sparkles, Send, X, Bot } from 'lucide-react';
 
 export function AskBuildForceAIChat() {
   const [isOpen, setIsOpen] = useState(false);

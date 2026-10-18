@@ -1,5 +1,5 @@
 import React from 'react';
-import { Sparkles, ArrowRight, LayoutDashboard, ExternalLink, ChevronDown, CheckCircle2 } from 'lucide-react';
+import { Sparkles, ArrowRight, LayoutDashboard, ChevronDown } from 'lucide-react';
 
 export function Navbar({ currentView, setCurrentView, onOpenDemoModal, onOpenVideoModal }) {
   return (

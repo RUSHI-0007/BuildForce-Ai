@@ -1,22 +1,9 @@
 import React, { useState } from 'react';
 import { GlobalSidebar } from '../layout/GlobalSidebar';
 import { TopBar } from '../layout/TopBar';
-import { useApp } from '../../context/AppContext';
+import { useApp } from '../../hooks/useApp';
 
-// Pages
-import { ProjectsPage } from '../../pages/org/ProjectsPage';
-import { ProjectOverview } from '../../pages/project/ProjectOverview';
-import { TasksPage } from '../../pages/project/TasksPage';
-import { IssuesPage } from '../../pages/project/IssuesPage';
-import { MaterialsPage } from '../../pages/org/MaterialsPage';
-import { LabourPage } from '../../pages/org/LabourPage';
-import { PaymentsPage } from '../../pages/project/PaymentsPage';
-import { DrivePage } from '../../pages/project/DrivePage';
-import { CashflowPage } from '../../pages/org/CashflowPage';
-import { LibraryPage } from '../../pages/org/LibraryPage';
-import { ReportsPage } from '../../pages/org/ReportsPage';
-import { SettingsPage } from '../../pages/org/SettingsPage';
-import { AgentsPage } from '../../pages/agents/AgentsPage';
+import { renderPortalView } from '../../app/routes';
 
 export function BuildSitePortal({ onBackToLanding, initialAgent = null }) {
   const { currentView, setCurrentView, setActiveAgentId } = useApp();
@@ -30,38 +17,7 @@ export function BuildSitePortal({ onBackToLanding, initialAgent = null }) {
     }
   }, [initialAgent, setActiveAgentId, setCurrentView]);
 
-  const renderContent = () => {
-    switch (currentView) {
-      case 'sites':
-        return <ProjectsPage />;
-      case 'site_dashboard':
-        return <ProjectOverview />;
-      case 'tasks':
-        return <TasksPage />;
-      case 'issues':
-        return <IssuesPage />;
-      case 'materials':
-        return <MaterialsPage />;
-      case 'labour':
-        return <LabourPage />;
-      case 'payments':
-        return <PaymentsPage />;
-      case 'drive':
-        return <DrivePage />;
-      case 'cashflow':
-        return <CashflowPage />;
-      case 'library':
-        return <LibraryPage />;
-      case 'reports':
-        return <ReportsPage />;
-      case 'settings':
-        return <SettingsPage />;
-      case 'agents':
-        return <AgentsPage />;
-      default:
-        return <ProjectsPage />;
-    }
-  };
+  const renderContent = () => renderPortalView(currentView);
 
   return (
     <div style={{

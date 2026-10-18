@@ -1,14 +1,13 @@
 import React, { useState } from 'react';
 import { 
-  Building2, Plus, MapPin, IndianRupee, Calendar, 
-  ArrowRight, Search, CheckCircle2, Clock, Trash2
+  Building2, Plus, MapPin, IndianRupee, ArrowRight, Search, Clock, Trash2
 } from 'lucide-react';
-import { useApp } from '../../context/AppContext';
+import { useApp } from '../../hooks/useApp';
 import { StatsCard } from '../../components/ui/StatsCard';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { Modal } from '../../components/ui/Modal';
 
-export function ProjectsPage({ onOpenCreateModal }) {
+export function ProjectsPage({ _onOpenCreateModal }) {
   const { projects, selectProject, addProject, deleteProject } = useApp();
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');

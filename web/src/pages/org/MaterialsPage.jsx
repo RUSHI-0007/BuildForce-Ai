@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
 import { 
   Truck, Plus, ArrowDownLeft, ArrowUpRight, AlertTriangle, 
-  Search, Package, FileText, CheckCircle2
+  Package
 } from 'lucide-react';
-import { useApp } from '../../context/AppContext';
+import { useApp } from '../../hooks/useApp';
 import { StatsCard } from '../../components/ui/StatsCard';
-import { EmptyState } from '../../components/ui/EmptyState';
 import { Modal } from '../../components/ui/Modal';
 
 export function MaterialsPage() {
@@ -23,12 +22,12 @@ export function MaterialsPage() {
     min_threshold: '20'
   });
 
-  const [txForm, setTxForm] = useState({
+  const [txForm, setTxForm] = useState(() => ({
     item_id: materials[0]?.id || '',
     quantity: '',
     receiver: 'Ramesh Mistri',
     date: new Date().toISOString().split('T')[0]
-  });
+  }));
 
   const lowStockCount = materials.filter(m => m.in_stock <= m.min_threshold).length;
   const totalStockWorth = materials.reduce((acc, m) => acc + (m.in_stock * m.unit_price), 0);

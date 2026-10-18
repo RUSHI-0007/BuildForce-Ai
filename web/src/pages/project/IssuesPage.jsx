@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
 import { 
-  AlertTriangle, Plus, CheckCircle2, Clock, 
-  ShieldAlert, User, Filter, AlertCircle
+  AlertTriangle, Plus, CheckCircle2, ShieldAlert
 } from 'lucide-react';
-import { useApp } from '../../context/AppContext';
+import { useApp } from '../../hooks/useApp';
 import { StatsCard } from '../../components/ui/StatsCard';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { Modal } from '../../components/ui/Modal';

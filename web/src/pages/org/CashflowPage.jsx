@@ -1,13 +1,13 @@
-import React, { useState } from 'react';
+import React, {} from 'react';
 import { 
-  BadgeIndianRupee, TrendingUp, TrendingDown, AlertTriangle, 
-  Calendar, CheckCircle2, ShieldCheck, ArrowRight
+  BadgeIndianRupee, TrendingDown, AlertTriangle, 
+  Calendar, ShieldCheck, ArrowRight
 } from 'lucide-react';
-import { useApp } from '../../context/AppContext';
+import { useApp } from '../../hooks/useApp';
 import { StatsCard } from '../../components/ui/StatsCard';
 
 export function CashflowPage() {
-  const { payments, projects, setCurrentView, setActiveAgentId } = useApp();
+  const { payments, setCurrentView, setActiveAgentId } = useApp();
 
   const totalInflows = payments
     .filter(p => p.type === 'INCOME' && p.status === 'Received')

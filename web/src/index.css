@@ -1,3 +1,5 @@
+@import './styles/tokens.css';
+
 /* BuildForce AI Workforce Design System */
 :root {
   --font-sans: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;

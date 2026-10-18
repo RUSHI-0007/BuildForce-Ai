@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Sparkles, CheckCircle2, Play, Building2, Phone, Mail, User } from 'lucide-react';
+import { Sparkles, CheckCircle2, Building2, Phone, User } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 export function DemoRequestModal({ isOpen, onClose, onLaunchPortal }) {

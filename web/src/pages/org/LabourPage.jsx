@@ -1,16 +1,15 @@
 import React, { useState } from 'react';
 import { 
-  Users, Plus, Phone, Calendar, IndianRupee, 
-  Check, X, Clock, AlertCircle, CheckCircle2
+  Users, Plus, Phone, Calendar, IndianRupee
 } from 'lucide-react';
-import { useApp } from '../../context/AppContext';
+import { useApp } from '../../hooks/useApp';
 import { StatsCard } from '../../components/ui/StatsCard';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { Modal } from '../../components/ui/Modal';
 
 export function LabourPage() {
-  const { labour, attendance, addLabour, markAttendance, activeProject } = useApp();
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  const { labour, attendance, addLabour, markAttendance } = useApp();
+  const [selectedDate, setSelectedDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [isAddWorkerModalOpen, setIsAddWorkerModalOpen] = useState(false);
 
   const [newWorkerForm, setNewWorkerForm] = useState({

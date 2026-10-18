@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { 
-  CheckSquare, Plus, Calendar, User, CheckCircle2, 
-  Clock, AlertCircle, Filter, Trash2
+  CheckSquare, Plus, CheckCircle2, 
+  Clock, Trash2
 } from 'lucide-react';
-import { useApp } from '../../context/AppContext';
+import { useApp } from '../../hooks/useApp';
 import { StatsCard } from '../../components/ui/StatsCard';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { Modal } from '../../components/ui/Modal';
@@ -13,12 +13,12 @@ export function TasksPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [stageFilter, setStageFilter] = useState('ALL');
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState(() => ({
     name: '',
     stage: 'RCC Work',
     due_date: new Date().toISOString().split('T')[0],
     assigned_to: 'Ramesh Mistri'
-  });
+  }));
 
   const siteTasks = activeProject 
     ? tasks.filter(t => t.project_id === activeProject.id)
@@ -31,7 +31,6 @@ export function TasksPage() {
 
   const completedCount = siteTasks.filter(t => t.status === 'Completed').length;
   const inProgressCount = siteTasks.filter(t => t.status === 'In Progress').length;
-  const pendingCount = siteTasks.filter(t => t.status === 'Pending').length;
 
   const handleSubmit = (e) => {
     e.preventDefault();

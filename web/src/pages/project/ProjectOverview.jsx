@@ -1,13 +1,13 @@
 import React from 'react';
 import { 
-  Building2, MapPin, IndianRupee, Calendar, CheckSquare, 
-  AlertTriangle, Users, Truck, ArrowRight, ShieldCheck, Clock
+  MapPin, IndianRupee, CheckSquare, 
+  AlertTriangle, Users, Truck
 } from 'lucide-react';
-import { useApp } from '../../context/AppContext';
+import { useApp } from '../../hooks/useApp';
 import { StatsCard } from '../../components/ui/StatsCard';
 
 export function ProjectOverview() {
-  const { activeProject, tasks, issues, payments, materials, setCurrentView } = useApp();
+  const { activeProject, tasks, issues, payments, setCurrentView } = useApp();
 
   if (!activeProject) {
     return (

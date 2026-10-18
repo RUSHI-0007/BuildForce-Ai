@@ -1,7 +1,6 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import api from '../api/client';
-
-const AppContext = createContext(null);
+import React, { useState, useEffect } from 'react';
+import api from '../services/httpClient';
+import { AppContext } from './appContextInstance';
 
 const STORAGE_KEYS = {
   PROJECTS: 'buildsite_projects',
@@ -385,6 +384,3 @@ export function AppProvider({ children }) {
   );
 }
 
-export function useApp() {
-  return useContext(AppContext);
-}

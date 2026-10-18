@@ -1,9 +1,8 @@
 import React from 'react';
-import { useApp } from '../../context/AppContext';
-import { BadgeIndianRupee, Sparkles, CheckCircle2, ShieldCheck, ArrowUpRight } from 'lucide-react';
+import { useApp } from '../../hooks/useApp';
 
-export function CashBillsAgent({ activeProject }) {
-  const { payments = [], attendance = [], labour = [] } = useApp();
+export function CashBillsAgent({ _activeProject }) {
+  const { payments = [] } = useApp();
 
   const totalIncome = payments
     .filter(p => p.type === 'INCOME' && p.status === 'Received')

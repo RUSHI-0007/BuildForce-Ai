@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { 
-  Folder, Plus, FileText, Image, Download, 
-  Trash2, UploadCloud, Calendar
+  Folder, FileText, Image, Download, 
+  Trash2, UploadCloud
 } from 'lucide-react';
-import { useApp } from '../../context/AppContext';
+import { useApp } from '../../hooks/useApp';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { Modal } from '../../components/ui/Modal';
 

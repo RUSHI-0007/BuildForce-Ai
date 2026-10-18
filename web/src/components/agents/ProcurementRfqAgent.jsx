@@ -1,9 +1,9 @@
 import React from 'react';
-import { useApp } from '../../context/AppContext';
-import { ShoppingBag, Truck, AlertTriangle, ArrowRight } from 'lucide-react';
+import { useApp } from '../../hooks/useApp';
+import { Truck } from 'lucide-react';
 
-export function ProcurementRfqAgent({ activeProject }) {
-  const { materials = [], materialTransactions = [] } = useApp();
+export function ProcurementRfqAgent({ _activeProject }) {
+  const { materials = [] } = useApp();
 
   const lowStockItems = materials.filter(m => Number(m.in_stock || 0) <= Number(m.min_threshold || 0));
 

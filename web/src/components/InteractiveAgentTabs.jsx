@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
 import { 
-  Sparkles, CheckCircle, ArrowRight, Clock, AlertCircle, 
-  Calendar, FileSpreadsheet, ShieldCheck, ShoppingCart, 
-  BadgeIndianRupee, ChevronRight, Zap 
+  Sparkles, CheckCircle, ArrowRight, ChevronRight, Zap 
 } from 'lucide-react';
 import { AI_AGENTS } from '../data/mockData';
 

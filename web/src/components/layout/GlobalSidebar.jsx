@@ -5,11 +5,11 @@ import {
   FileText, BookOpen, BadgeIndianRupee, ChevronLeft, ChevronRight,
   Folder, MapPin, Check
 } from 'lucide-react';
-import { useApp } from '../../context/AppContext';
-import { useAuth } from '../../context/AuthContext';
+import { useApp } from '../../hooks/useApp';
+import { useAuth } from '../../hooks/useAuth';
 
-export function GlobalSidebar({ collapsed, onToggleCollapse, onBackToLanding }) {
-  const { currentView, setCurrentView, activeProject, projects, selectProject, setActiveProjectId, issues } = useApp();
+export function GlobalSidebar({ collapsed, onToggleCollapse, _onBackToLanding }) {
+  const { currentView, setCurrentView, activeProject, projects, selectProject, issues } = useApp();
   const { org } = useAuth();
 
   const [showSiteDropdown, setShowSiteDropdown] = useState(false);

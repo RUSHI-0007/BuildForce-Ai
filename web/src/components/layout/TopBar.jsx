@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { 
-  Search, Bell, Plus, ChevronDown, User, LogOut, 
-  ExternalLink, Sparkles, Building2, Check, RefreshCw
+  Plus, ChevronDown, LogOut, 
+  ExternalLink, Building2, Check, RefreshCw
 } from 'lucide-react';
-import { useApp } from '../../context/AppContext';
-import { useAuth } from '../../context/AuthContext';
+import { useApp } from '../../hooks/useApp';
+import { useAuth } from '../../hooks/useAuth';
 
 export function TopBar({ onOpenNewModal, onBackToLanding }) {
   const { currentView, setCurrentView, activeProject, projects, selectProject, resetToCleanWorkspace } = useApp();
@@ -145,7 +145,7 @@ export function TopBar({ onOpenNewModal, onBackToLanding }) {
         </span>
       </div>
 
-      {/* Right Controls: Quick Add, Reset/Demo Toggle, User Menu */}
+      {/* Right Controls: Quick Add, Reset/Demo Toggle Menu */}
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
         {/* Quick Add Button */}
         <div style={{ position: 'relative' }}>

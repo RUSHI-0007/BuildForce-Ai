@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Building2, ShieldCheck, ArrowRight, Sparkles, CheckCircle2 } from 'lucide-react';
-import { useAuth } from '../../context/AuthContext';
+import { Building2, ShieldCheck, ArrowRight } from 'lucide-react';
+import { useAuth } from '../../hooks/useAuth';
 
 export function LoginPage({ onLoginSuccess }) {
   const { signInWithGoogle, loginAsContractor } = useAuth();

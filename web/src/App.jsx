@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
-import { AuthProvider } from './context/AuthContext';
-import { AppProvider } from './context/AppContext';
+import { AppProviders } from './app/providers';
 import { Navbar } from './components/Navbar';
 import { LandingHero } from './components/LandingHero';
 import { SocialProof } from './components/SocialProof';
@@ -34,9 +33,8 @@ export function App() {
   };
 
   return (
-    <AuthProvider>
-      <AppProvider>
-        <div className="app-container" style={{ minHeight: '100vh' }}>
+    <AppProviders>
+      <div className="app-container" style={{ minHeight: '100vh' }}>
           {currentView === 'landing' ? (
             <>
               {/* Top Bar & Navbar */}
@@ -103,8 +101,7 @@ export function App() {
             onClose={() => setIsVideoModalOpen(false)}
           />
         </div>
-      </AppProvider>
-    </AuthProvider>
+    </AppProviders>
   );
 }
 

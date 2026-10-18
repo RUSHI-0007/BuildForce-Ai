@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
 import { 
-  CreditCard, Plus, IndianRupee, ArrowDownLeft, ArrowUpRight, 
-  Calendar, CheckCircle2, Clock
+  CreditCard, Plus, ArrowDownLeft, ArrowUpRight
 } from 'lucide-react';
-import { useApp } from '../../context/AppContext';
+import { useApp } from '../../hooks/useApp';
 import { StatsCard } from '../../components/ui/StatsCard';
 import { EmptyState } from '../../components/ui/EmptyState';
 import { Modal } from '../../components/ui/Modal';
@@ -12,14 +11,14 @@ export function PaymentsPage() {
   const { payments, activeProject, addPayment } = useApp();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState(() => ({
     milestone: '',
     amount: '',
     type: 'INCOME', // INCOME or EXPENSE
     status: 'Received',
     mode: 'NEFT/Bank',
     date: new Date().toISOString().split('T')[0]
-  });
+  }));
 
   const sitePayments = activeProject 
     ? payments.filter(p => p.project_id === activeProject.id)
@@ -27,10 +26,6 @@ export function PaymentsPage() {
 
   const totalReceived = sitePayments
     .filter(p => p.type === 'INCOME' && p.status === 'Received')
-    .reduce((acc, p) => acc + (Number(p.amount) || 0), 0);
-
-  const totalPending = sitePayments
-    .filter(p => p.type === 'INCOME' && p.status !== 'Received')
     .reduce((acc, p) => acc + (Number(p.amount) || 0), 0);
 
   const totalExpenses = sitePayments

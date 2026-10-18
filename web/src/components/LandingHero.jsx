@@ -1,8 +1,7 @@
-import React, { useState } from 'react';
-import { Sparkles, ArrowRight, Play, TrendingUp, AlertTriangle, CheckCircle, FileText, Calendar, ShieldCheck, ChevronRight } from 'lucide-react';
+import React from 'react';
+import { Sparkles, ArrowRight, Play, AlertTriangle, ChevronRight } from 'lucide-react';
 
 export function LandingHero({ onOpenDemoModal, onOpenVideoModal, onLaunchPortal }) {
-  const [activeProjectMock, setActiveProjectMock] = useState('YC Tech Park');
 
   return (
     <section className="hero-section">

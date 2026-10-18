@@ -1,5 +1,7 @@
 import React from 'react';
 
+const CURRENT_YEAR = new Date().getFullYear();
+
 export function Footer({ onOpenDemoModal, onLaunchPortal }) {
   return (
     <footer className="footer">
@@ -66,7 +68,7 @@ export function Footer({ onOpenDemoModal, onLaunchPortal }) {
         flexWrap: 'wrap',
         gap: 12
       }}>
-        <div>© {new Date().getFullYear()} BuildForce AI. Real site numbers, zero fake statistics.</div>
+        <div>© {CURRENT_YEAR} BuildForce AI. Real site numbers, zero fake statistics.</div>
         <div>Designed for small civil contractors with 1 to 10 active sites.</div>
       </div>
     </footer>
