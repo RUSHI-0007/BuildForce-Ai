@@ -137,8 +137,9 @@ export function AppProvider({ children }) {
   useEffect(() => { localStorage.setItem(STORAGE_KEYS.ATTENDANCE, JSON.stringify(attendance)); }, [attendance]);
   useEffect(() => { localStorage.setItem(STORAGE_KEYS.PAYMENTS, JSON.stringify(payments)); }, [payments]);
 
-  // Try sync with real backend if backend server is running
+  // Try sync with real backend if backend server is configured & running
   useEffect(() => {
+    if (!api.defaults.baseURL) return;
     let isMounted = true;
     api.get('/projects')
       .then(res => {
@@ -172,11 +173,13 @@ export function AppProvider({ children }) {
     setProjects(prev => [newProj, ...prev]);
     setActiveProjectId(newProj.id);
 
-    // Also send to backend
-    try {
-      await api.post('/projects', newProj);
-    } catch {
-      // offline fallback
+    // Also send to backend if backend URL configured
+    if (api.defaults.baseURL) {
+      try {
+        await api.post('/projects', newProj);
+      } catch {
+        // offline fallback
+      }
     }
 
     return newProj;
