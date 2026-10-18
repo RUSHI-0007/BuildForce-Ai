@@ -56,8 +56,6 @@ describe('ISSUE-001 Regression: AgentsPage & Agent Tabs Rendering', () => {
 
       // Verify the agent hub header is present
       expect(html).toContain('Agent Team Hub');
-      // Verify the agent hub header is present
-      expect(html).toContain('Agent Team Hub');
       // Verify the active agent view label is rendered
       expect(html).toContain('Active View');
       expect(html).toContain(agent.name.replace(/&/g, '&amp;'));
