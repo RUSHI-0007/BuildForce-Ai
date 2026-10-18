@@ -16,6 +16,7 @@ export const STORAGE_KEYS = {
   PROPOSALS: 'buildsite_proposals',
   CASH_SETTINGS: 'buildsite_cash_settings',
   EVENT_LOG: 'buildsite_event_log',
+  EVENT_LOG_ARCHIVE: 'buildsite_event_log_archive',
   DELIVERIES: 'buildsite_deliveries',
   QUOTES: 'buildsite_quotes',
   RFQS: 'buildsite_rfqs',

@@ -176,8 +176,21 @@ export function AppProvider({ children }) {
 
   // Append-only Event Ledger instance
   const [eventLedger] = useState(() => {
+    const archivedLog = storageService.get(STORAGE_KEYS.EVENT_LOG_ARCHIVE, []);
     const savedLog = storageService.get(STORAGE_KEYS.EVENT_LOG, []);
-    return createEventLedger(Array.isArray(savedLog) ? savedLog : []);
+    const initialEvents = [
+      ...(Array.isArray(archivedLog) ? archivedLog : []),
+      ...(Array.isArray(savedLog) ? savedLog : [])
+    ];
+    const seen = new Set();
+    const deduped = [];
+    for (const evt of initialEvents) {
+      if (evt && evt.id && !seen.has(evt.id)) {
+        seen.add(evt.id);
+        deduped.push(evt);
+      }
+    }
+    return createEventLedger(deduped);
   });
 
   // Current view navigation
@@ -204,17 +217,37 @@ export function AppProvider({ children }) {
   useEffect(() => { storageService.set(STORAGE_KEYS.RFQS, rfqs); }, [rfqs]);
   useEffect(() => { storageService.set(STORAGE_KEYS.PLAN_VERSIONS, planVersions); }, [planVersions]);
 
+  // Archive helper to prevent losing events pruned from active storage
+  const archivePrunedEvents = (prunedEvents) => {
+    if (!Array.isArray(prunedEvents) || prunedEvents.length === 0) return;
+    try {
+      const existingArchive = storageService.get(STORAGE_KEYS.EVENT_LOG_ARCHIVE, []) || [];
+      const existingIds = new Set(existingArchive.map(e => e.id));
+      const toAdd = prunedEvents.filter(e => e && e.id && !existingIds.has(e.id));
+      if (toAdd.length > 0) {
+        storageService.set(STORAGE_KEYS.EVENT_LOG_ARCHIVE, [...existingArchive, ...toAdd]);
+      }
+    } catch (err) {
+      console.warn('[EventLedger] Failed to archive pruned events:', err);
+    }
+  };
+
   // Size guard helper for persisting the event ledger to localStorage
   const persistLedger = (events) => {
+    if (!Array.isArray(events)) return;
     try {
-      const boundedEvents = Array.isArray(events)
-        ? events.slice(-MAX_LEDGER_STORAGE_ENTRIES)
-        : [];
+      if (events.length > MAX_LEDGER_STORAGE_ENTRIES) {
+        const prunedEvents = events.slice(0, -MAX_LEDGER_STORAGE_ENTRIES);
+        archivePrunedEvents(prunedEvents);
+      }
+      const boundedEvents = events.slice(-MAX_LEDGER_STORAGE_ENTRIES);
       storageService.set(STORAGE_KEYS.EVENT_LOG, boundedEvents);
     } catch (err) {
       console.warn('[EventLedger] Size guard triggered, pruning older events:', err);
       try {
-        const emergencyEvents = Array.isArray(events) ? events.slice(-50) : [];
+        const emergencyEvents = events.slice(-50);
+        const emergencyPruned = events.slice(0, -50);
+        archivePrunedEvents(emergencyPruned);
         storageService.set(STORAGE_KEYS.EVENT_LOG, emergencyEvents);
       } catch {
         // Unrecoverable storage error

@@ -195,7 +195,7 @@ describe('AppContext - Migration, New Entities & Event Ledger Persistence', () =
     expect(task.material_needs[0].material_id).toBe('mat_1');
   });
 
-  it('enforces size guard for event ledger in localStorage (capping at 500 and handling QuotaExceededError)', () => {
+  it('enforces size guard for event ledger in localStorage (capping at 500, archiving pruned events, and handling QuotaExceededError)', () => {
     const contextValue = renderWithContext();
 
     // Append 550 events
@@ -206,17 +206,23 @@ describe('AppContext - Migration, New Entities & Event Ledger Persistence', () =
     // In-memory ledger holds all 550 events
     expect(contextValue.eventLedger.read().length).toBeGreaterThanOrEqual(550);
 
-    // But localStorage persistence must be capped at 500 entries (sliding window)
+    // Active storage capped at 500 entries (sliding window keeping events 51 to 550)
     const storedEvents = JSON.parse(mockStorage.getItem(`${STORAGE_KEYS.EVENT_LOG}_v1`));
-    expect(storedEvents.length).toBeLessThanOrEqual(500);
-    // Sliding window keeps the latest events
+    expect(storedEvents).toHaveLength(500);
+    expect(storedEvents[0].payload.sequence).toBe(51);
     expect(storedEvents[storedEvents.length - 1].payload.sequence).toBe(550);
+
+    // Pruned events are archived instead of being lost (events 1 to 50)
+    const archivedEvents = JSON.parse(mockStorage.getItem(`${STORAGE_KEYS.EVENT_LOG_ARCHIVE}_v1`));
+    expect(archivedEvents).toHaveLength(50);
+    expect(archivedEvents[0].payload.sequence).toBe(1);
+    expect(archivedEvents[49].payload.sequence).toBe(50);
 
     // Test QuotaExceededError handling in storage
     const originalSetItem = mockStorage.setItem;
     let quotaErrorFired = false;
     mockStorage.setItem = (k, v) => {
-      if (k.includes('buildsite_event_log') && !quotaErrorFired) {
+      if (k === `${STORAGE_KEYS.EVENT_LOG}_v1` && !quotaErrorFired) {
         quotaErrorFired = true;
         const err = new Error('QuotaExceeded');
         err.name = 'QuotaExceededError';
@@ -230,5 +236,15 @@ describe('AppContext - Migration, New Entities & Event Ledger Persistence', () =
     expect(() => {
       contextValue.logEvent('QUOTA_TEST_EVENT', { test: true });
     }).not.toThrow();
+
+    // Quota test asserts what was kept in active storage (latest 50 events ending with the quota event)
+    const storedAfterQuota = JSON.parse(mockStorage.getItem(`${STORAGE_KEYS.EVENT_LOG}_v1`));
+    expect(storedAfterQuota).toHaveLength(50);
+    expect(storedAfterQuota[storedAfterQuota.length - 1].type).toBe('QUOTA_TEST_EVENT');
+    expect(storedAfterQuota[storedAfterQuota.length - 1].payload.test).toBe(true);
+    expect(storedAfterQuota[0].payload.sequence).toBe(502);
+
+    // In-memory ledger still keeps all 551 events
+    expect(contextValue.eventLedger.read()).toHaveLength(551);
   });
 });
